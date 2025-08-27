@@ -6,16 +6,17 @@ A powerful and customizable Flutter date picker widget with advanced features in
 
 ### Current Implementation ✅
 
-- **Single Date Selection** - Basic single date picking functionality
-- **Month/Year View Navigation** - Switch between month and year views
+- **Multiple Selection Modes** - Support for single, range, multiple, and basic date selection modes
+- **Flexible Layout Options** - Horizontal and vertical scrolling directions
+- **Multi-Month Views** - Single or double month display options
+- **Theme Customization** - Built-in dark/light mode switching with FlickTheme
+- **First Day of Week Configuration** - Configurable week start day (Monday, Sunday, Saturday, or locale-based)
 - **Date Range Constraints** - Limit selectable dates with startDate/endDate parameters
-- **Date Range Selection** - Select start and end date ranges with highlight display
-- **Custom Disable Logic** - Flexible date disabling rules with custom functions
-- **Localization Support** - Multi-language support (Chinese, English) with regional date formats
-- **First Day of Week Configuration** - Customizable week start day (FirstDayOfWeek enum)
-- **Theme System** - Dark/light mode switching with custom style extensions
-- **Multiple Date Selection** - Support for selecting multiple non-consecutive dates
-- **Basic UI Structure** - Well-structured and responsive user interface
+- **Custom Date Disabling** - Flexible date disabling rules with custom functions
+- **Today Highlighting** - Optional highlighting of current date
+- **Real-time Selection Display** - Live updates of selected dates
+- **Responsive Design** - Adaptive UI that works across different screen sizes
+- **Interactive Demo** - Comprehensive demo application with all feature controls
 
 ## Development Roadmap
 
@@ -104,18 +105,151 @@ dependencies:
 
 ## Usage
 
+### Basic Single Date Selection
+
 ```dart
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
 
-// Basic usage example
-FlickerDatePicker(
-  onDateSelected: (DateTime date) {
-    print('Selected date: $date');
+Flicker(
+  mode: FlickerSelectionMode.single,
+  value: [DateTime.now()],
+  startDate: DateTime(2024, 1, 1),
+  endDate: DateTime(2025, 12, 31),
+  onValueChange: (List<DateTime> dates) {
+    print('Selected date: ${dates.first}');
   },
-  startDate: DateTime(2020),
-  endDate: DateTime(2030),
+  theme: FlickTheme(useDarkMode: false),
+  highlightToday: true,
+  firstDayOfWeek: FirstDayOfWeek.monday,
 )
+```
+
+### Date Range Selection
+
+```dart
+Flicker(
+  mode: FlickerSelectionMode.range,
+  value: [DateTime(2025, 8, 1), DateTime(2025, 8, 15)],
+  startDate: DateTime(2024, 1, 1),
+  endDate: DateTime(2025, 12, 31),
+  onValueChange: (List<DateTime> dates) {
+    if (dates.length == 2) {
+      print('Range: ${dates.first} to ${dates.last}');
+    }
+  },
+  theme: FlickTheme(useDarkMode: true),
+  viewCount: 2, // Show two months
+  scrollDirection: Axis.horizontal,
+)
+```
+
+### Multiple Date Selection
+
+```dart
+Flicker(
+  mode: FlickerSelectionMode.many,
+  value: [DateTime(2025, 8, 5), DateTime(2025, 8, 10), DateTime(2025, 8, 20)],
+  startDate: DateTime(2024, 1, 1),
+  endDate: DateTime(2025, 12, 31),
+  onValueChange: (List<DateTime> dates) {
+    print('Selected ${dates.length} dates: $dates');
+  },
+  disabledDate: (DateTime date) {
+    // Disable weekends
+    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+  },
+  theme: FlickTheme(useDarkMode: false),
+  firstDayOfWeek: FirstDayOfWeek.sunday,
+)
+```
+
+### Vertical Layout with Custom Styling
+
+```dart
+Flicker(
+  mode: FlickerSelectionMode.single,
+  value: [DateTime.now()],
+  startDate: DateTime(2024, 1, 1),
+  endDate: DateTime(2025, 12, 31),
+  onValueChange: (List<DateTime> dates) {
+    // Handle date selection
+  },
+  scrollDirection: Axis.vertical,
+  viewCount: 2,
+  theme: FlickTheme(useDarkMode: true),
+  highlightToday: true,
+  firstDayOfWeek: FirstDayOfWeek.locale,
+)
+```
+
+## API Reference
+
+### Flicker Widget
+
+The main date picker widget with comprehensive customization options.
+
+#### Properties
+
+| Property | Type | Description | Default |
+|----------|------|-------------|---------|
+| `mode` | `FlickerSelectionMode` | Selection mode: single, range, many, or basic | `FlickerSelectionMode.single` |
+| `value` | `List<DateTime>` | Currently selected dates | `[]` |
+| `startDate` | `DateTime` | Minimum selectable date | Required |
+| `endDate` | `DateTime` | Maximum selectable date | Required |
+| `onValueChange` | `Function(List<DateTime>)` | Callback when selection changes | Required |
+| `theme` | `FlickTheme` | Theme configuration for styling | `FlickTheme()` |
+| `highlightToday` | `bool` | Whether to highlight today's date | `false` |
+| `firstDayOfWeek` | `FirstDayOfWeek` | First day of the week | `FirstDayOfWeek.monday` |
+| `viewCount` | `int` | Number of months to display (1 or 2) | `1` |
+| `scrollDirection` | `Axis` | Scroll direction (horizontal/vertical) | `Axis.horizontal` |
+| `disabledDate` | `bool Function(DateTime)` | Function to determine disabled dates | `null` |
+
+### FlickerSelectionMode
+
+Enum defining the selection behavior:
+
+- `FlickerSelectionMode.single` - Single date selection
+- `FlickerSelectionMode.range` - Date range selection (start and end)
+- `FlickerSelectionMode.many` - Multiple individual dates
+- `FlickerSelectionMode.basic` - Basic single date with horizontal scroll
+
+### FirstDayOfWeek
+
+Enum for configuring the first day of the week:
+
+- `FirstDayOfWeek.monday` - Week starts on Monday
+- `FirstDayOfWeek.sunday` - Week starts on Sunday
+- `FirstDayOfWeek.saturday` - Week starts on Saturday
+- `FirstDayOfWeek.locale` - Use system locale setting
+
+### FlickTheme
+
+Theme configuration class:
+
+```dart
+FlickTheme(
+  useDarkMode: true, // Enable dark mode
+  // Additional theme properties...
+)
+```
+
+## Demo Application
+
+The package includes a comprehensive demo application (`FlickerPickerDemo`) that showcases all features:
+
+- **Interactive Controls**: Switch between different modes, themes, and layouts
+- **Real-time Preview**: See changes immediately as you adjust settings
+- **Feature Testing**: Test all selection modes and configuration options
+- **Code Examples**: Reference implementation for common use cases
+
+To run the demo:
+
+```dart
+import 'package:flutter_flicker/demos/flicker_demo.dart';
+
+// Use FlickerPickerDemo widget in your app
+FlickerPickerDemo()
 ```
 
 ## Contributing
