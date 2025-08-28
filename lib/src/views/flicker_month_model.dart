@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_flicker/src/utils/date_helpers.dart';
+import 'package:flutter_flicker/src/views/date_helpers.dart';
 // import './flicker.dart';
 
 typedef Selected = List<DateTime>;
@@ -18,17 +18,18 @@ enum FlickerSelectionMode {
 typedef SMode = FlickerSelectionMode;
 // void Function(Selected);
 
-class FlickerModel {
+class FlickerMonthModel {
   final ValueChanged<Selected> sync;
   final bool Function(DateTime)? disabled;
   final VoidCallback? rebuild;
-
-  FlickerModel({required this.sync, required this.disabled, this.rebuild});
+  FlickerMonthModel({required this.sync, required this.disabled, this.rebuild});
   late FlickerSelectionMode mode = FlickerSelectionMode.single;
   late Selected selection = [];
   bool isToday(DateTime date) {
     return DateHelpers.isSameDay(date, DateTime.now());
   }
+
+
 
   /// Checks if a date falls within a selected range
   ///

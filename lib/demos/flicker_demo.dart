@@ -24,10 +24,13 @@ class FlickerPickerDemo extends StatefulWidget {
 
 class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   /// Currently selected dates for display and testing
-  List<DateTime> _selectedDates = [DateTime(2025, 8, 22), DateTime.now()];
+  List<DateTime> _selectedDates = [
+    DateTime(2024, 8, 22),
+    DateTime(2025, 8, 29),
+  ];
 
   /// Theme mode toggle
-  bool _useDarkMode = true;
+  bool _useDarkMode = false;
 
   /// Scroll direction configuration
   Axis _axis = Axis.horizontal;
@@ -36,16 +39,16 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   FirstDayOfWeek _firstDayOfWeek = FirstDayOfWeek.monday;
 
   /// Current picker mode for demo
-  PickerMode _flickerMode = PickerMode.range;
+  PickerMode _flickerMode = PickerMode.single;
 
   /// Number of months to display
   int _viewCount = 1;
 
   /// Minimum selectable date
-  final DateTime _startDate = DateTime(2024, 1, 1);
+  late DateTime? _startDate = DateTime(2025, 1, 31);
 
   /// Maximum selectable date
-  final DateTime _endDate = DateTime(2025, 9, 30);
+  late DateTime? _endDate = DateTime(2025, 9, 1);
 
   /// Handles date selection changes from the picker
   void onDatesChanged(List<DateTime> dates) {
@@ -250,6 +253,20 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
           if (value == PickerMode.single) {
             _selectedDates = [DateTime(2025, 9, 1), DateTime(2025, 9, 2)];
           }
+          if (value == PickerMode.range) {
+            _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
+          }
+
+          if (value == PickerMode.basic) {
+            // _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
+            // _startDate = DateTime(2021, 12, 1);
+            // _endDate = DateTime(2026, 9, 2);
+
+            _startDate = null;
+            _endDate = null;
+            // (2025);
+          }
+
           _flickerMode = value;
         });
       },
@@ -322,6 +339,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
 
   /// Basic mode demo (single date selection with horizontal scrolling)
   Flicker _buildBasic() {
+    debugPrint('startDate: $_startDate, endDate: $_endDate');
+
     return Flicker(
       value: _selectedDates,
       startDate: _startDate,
@@ -340,7 +359,6 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   /// Single date selection demo
   Widget _buildSingle() {
     return Flicker(
-      mode: FlickerSelectionMode.single,
       value: _selectedDates,
       startDate: _startDate,
       endDate: _endDate,

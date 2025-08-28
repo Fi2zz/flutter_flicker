@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class FlickerFadeView extends StatelessWidget {
   /// Animation duration (300 milliseconds)

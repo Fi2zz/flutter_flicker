@@ -12,8 +12,16 @@ class DateHelpers {
     return DateTime(value.year, value.month, value.day);
   }
 
+  static DateTime prevMonth(DateTime date) {
+    return DateTime(date.year, date.month - 1);
+  }
+
   static DateTime nextMonth(DateTime date) {
     return DateTime(date.year, date.month + 1);
+  }
+
+  static DateTime calcMonth(DateTime date, int step) {
+    return DateTime(date.year, date.month + step);
   }
 
   static int getDaysInMonth(DateTime date) {

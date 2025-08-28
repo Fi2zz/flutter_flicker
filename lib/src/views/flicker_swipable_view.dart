@@ -13,8 +13,7 @@ enum SwipeDirection {
 /// Generic swipable view builder function type
 ///
 /// Receives the current item's index and data, returns the corresponding Widget
-typedef GenericSwipableViewBuilder<T> =
-    Widget Function(BuildContext context, T item);
+typedef SwipableViewBuilder<T> = Widget Function(BuildContext context, T item);
 
 /// Swipe callback function type
 ///
@@ -23,8 +22,8 @@ typedef SwipeCallback = void Function(SwipeDirection direction);
 
 /// Swipe validation callback function type
 ///
-/// Called before a swipe gesture is executed to determine if the swipe is allowed
-/// Returns true if the swipe in the given direction should be allowed, false otherwise
+/// Called before executing a swipe gesture to determine if the swipe is allowed
+/// Returns true to allow the swipe in the specified direction, false to prohibit
 typedef SwipeValidationCallback =
     bool Function(int nextIndex, SwipeDirection direction);
 
@@ -87,10 +86,10 @@ class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
 ///
 /// ### Basic Usage
 /// ```dart
-/// final controller = GenericSwipableController();
+/// final controller = SwipeController();
 ///
-/// // Use in GenericSwipableView
-/// GenericSwipableView(
+/// // Use in SwipableView
+/// SwipableView(
 ///   controller: controller,
 ///   // ... other parameters
 /// )
@@ -100,16 +99,15 @@ class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
 /// controller.slide(-1);  // Swipe backward 1 page
 /// controller.slide(3);   // Swipe forward 3 pages
 /// ```
-class GenericSwipableController {
+class SwipeController {
   PageController? _pageController;
   int Function()? _getCurrentIndex;
 
-  /// Attach controller to GenericSwipableView
+  /// Attach controller to SwipableView
   ///
-  /// This method is called internally by GenericSwipableView, users typically don't need to call it directly.
+  /// This method is called internally by SwipableView, users typically don't need to call it directly.
   ///
   /// - [pageController]: PageView controller
-  /// - [disabledAt]: Function to check if specified index is disabled
   /// - [getCurrentIndex]: Function to get current page index
   void attach(PageController pageController, int Function() getCurrentIndex) {
     _pageController = pageController;
@@ -118,7 +116,7 @@ class GenericSwipableController {
 
   /// Release controller resources
   ///
-  /// This method is called internally by GenericSwipableView, users typically don't need to call it directly.
+  /// This method is called internally by SwipableView, users typically don't need to call it directly.
   void dispose() {
     _pageController = null;
     _getCurrentIndex = null;
@@ -166,7 +164,7 @@ class GenericSwipableController {
 ///
 /// ### Basic Usage
 /// ```dart
-/// GenericSwipableView<String>(
+/// SwipableView<String>(
 ///   items: ['Item 1', 'Item 2', 'Item 3'],
 ///   initialIndex: 0,
 ///   onIndexChange: (index) => print('Current index: $index'),
@@ -176,9 +174,9 @@ class GenericSwipableController {
 ///
 /// ### Using External Controller and Swipe Detection
 /// ```dart
-/// final controller = GenericSwipableController();
+/// final controller = SwipeController();
 ///
-/// GenericSwipableView<int>(
+/// SwipableView<int>(
 ///   controller: controller,
 ///   items: [1, 2, 3, 4, 5],
 ///   initialIndex: 2,
@@ -208,7 +206,7 @@ class GenericSwipableController {
 /// controller.slide(1);  // Next page
 /// controller.slide(-1); // Previous page
 /// ```
-class GenericSwipableView<T> extends StatefulWidget {
+class SwipableView<T> extends StatefulWidget {
   /// Data source list
   final List<T> items;
 
@@ -216,15 +214,8 @@ class GenericSwipableView<T> extends StatefulWidget {
   final int initialIndex;
 
   /// External controller for programmatic swipe control
-  final GenericSwipableController? controller;
+  final SwipeController? controller;
 
-  /// Optional item disable function
-  ///
-  /// Returns true if the item is disabled, false if available.
-  /// Disabled items will prevent swiping to that page.
-  final bool Function(T)? disabledItem;
-
-  /// Index change callback function
   ///
   /// This function is called when the user swipes to switch pages, passing in the new index.
   final void Function(int) onIndexChange;
@@ -245,7 +236,7 @@ class GenericSwipableView<T> extends StatefulWidget {
   /// Custom builder function
   ///
   /// Used to build the view content for each item, receiving the current item's data.
-  final GenericSwipableViewBuilder<T> builder;
+  final SwipableViewBuilder<T> builder;
 
   /// Swipe direction
   ///
@@ -264,19 +255,17 @@ class GenericSwipableView<T> extends StatefulWidget {
   /// - [initialIndex]: Initial display index (required)
   /// - [onIndexChange]: Index change callback (required)
   /// - [builder]: Custom builder (required)
-  /// - [disabledItem]: Item disable function (optional)
   /// - [controller]: External controller (optional)
   /// - [onSwipe]: Swipe direction callback (optional)
   /// - [canSwipe]: Swipe validation callback (optional)
   /// - [scrollDirection]: Swipe direction (default horizontal)
   /// - [swipeThreshold]: Swipe threshold (default 80.0)
-  const GenericSwipableView({
+  const SwipableView({
     super.key,
     required this.items,
     required this.initialIndex,
     required this.onIndexChange,
     required this.builder,
-    this.disabledItem,
     this.controller,
     this.onSwipe,
     this.canSwipe,
@@ -285,10 +274,10 @@ class GenericSwipableView<T> extends StatefulWidget {
   });
 
   @override
-  State<GenericSwipableView<T>> createState() => _GenericSwipableViewState<T>();
+  State<SwipableView<T>> createState() => _SwipableViewState<T>();
 }
 
-class _GenericSwipableViewState<T> extends State<GenericSwipableView<T>> {
+class _SwipableViewState<T> extends State<SwipableView<T>> {
   late PageController _pageController;
   late int _currentIndex;
 
@@ -381,9 +370,7 @@ class _GenericSwipableViewState<T> extends State<GenericSwipableView<T>> {
 
   /// Handle page change
   void _handlePageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
     widget.onIndexChange(index);
   }
 
@@ -402,7 +389,7 @@ class _GenericSwipableViewState<T> extends State<GenericSwipableView<T>> {
   }
 
   @override
-  void didUpdateWidget(GenericSwipableView<T> oldWidget) {
+  void didUpdateWidget(SwipableView<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     // Check if initial index has changed

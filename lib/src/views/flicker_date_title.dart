@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/views/shared.dart';
+import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'package:intl/intl.dart';
 import 'flicker_extensions.dart';
 
@@ -18,12 +18,16 @@ class FlickerDateTitle extends StatelessWidget {
   /// Whether to show rotation indicator (triangle)
   final bool? roate;
 
+  /// Whether to show the triangle indicator
+  final bool showTriangle;
+
   const FlickerDateTitle({
     super.key,
     required this.date,
     this.onTap,
     this.roate = false,
     this.padding,
+    this.showTriangle = true,
   });
 
   /// Formats a date as month/year string based on locale
@@ -36,10 +40,9 @@ class FlickerDateTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.flickerTheme;
     final title = Text(
       _formatMonth(context, date),
-      style: theme.titleTextStyle,
+      style: context.flickerTheme.titleTextStyle,
     );
     Widget child = title;
     if (onTap != null) {
@@ -53,7 +56,7 @@ class FlickerDateTitle extends StatelessWidget {
           spacing: 8,
           children: [
             title,
-            Triangle(active: roate),
+            if (showTriangle) Triangle(active: roate),
           ],
         ),
       );

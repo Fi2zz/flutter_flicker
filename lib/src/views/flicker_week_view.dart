@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_flicker/src/utils/constants.dart';
+import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'flicker_extensions.dart';
 
 /// Week day header widget
@@ -28,7 +28,7 @@ class FlickerWeekView extends StatelessWidget {
       mainAxisSpacing: 0,
       children: children,
     );
-    return SizedBox.fromSize(size: fixedSize, child: child);
+    return SizedBox(width: gridViewWidth, height: gridBasicSize, child: child);
   }
 
   /// Gets localized week day names based on first day setting
@@ -41,7 +41,11 @@ class FlickerWeekView extends StatelessWidget {
     return [...names.sublist(firstDay), ...names.sublist(0, firstDay)];
   }
 
-  static Widget count({required Axis direction, required int viewCount, required FirstDayOfWeek firstDayOfWeek}) {
+  static Widget count({
+    required Axis direction,
+    required int viewCount,
+    required FirstDayOfWeek firstDayOfWeek,
+  }) {
     Widget week = FlickerWeekView(firstDayOfWeek: firstDayOfWeek);
     if (viewCount == 2 && direction == Axis.horizontal) {
       return Row(children: [week, week]);

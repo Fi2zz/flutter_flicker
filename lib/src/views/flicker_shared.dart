@@ -2,6 +2,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'flicker_extensions.dart';
 
+const double gridBasicSize = 40.0;
+const double gridViewWidth = 7 * gridBasicSize;
+const double gridViewHeight = 5 * gridBasicSize;
+
 /// Shared widgets for the Flicker package
 ///
 /// This file contains common UI components used throughout the date picker:

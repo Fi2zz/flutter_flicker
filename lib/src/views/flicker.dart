@@ -1,16 +1,14 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/theme/theme.dart';
-import 'package:flutter_flicker/src/utils/constants.dart';
-import 'package:flutter_flicker/src/views/flicker_month_controller_view.dart';
-import 'package:flutter_flicker/src/views/flicker_selection.dart';
-import 'package:flutter_flicker/src/views/flicker_date_title.dart';
+import 'package:flutter_flicker/src/views/flicker_shared.dart';
+import 'package:flutter_flicker/src/views/flicker_month_view.dart';
+import 'package:flutter_flicker/src/views/flicker_month_model.dart';
 import 'package:flutter_flicker/src/views/flicker_fade_view.dart';
-import 'package:flutter_flicker/src/views/flicker_swipable_month_view.dart';
-import 'package:flutter_flicker/src/views/flicker_week_view.dart';
 import 'package:flutter_flicker/src/views/flicker_years_view.dart';
-import 'package:flutter_flicker/src/views/shared.dart';
 import 'flicker_extensions.dart';
-export './flicker_selection.dart' show FlickerSelectionMode;
+export 'flicker_month_model.dart' show FlickerSelectionMode;
+export './flicker_month_view.dart' show FlickerDayBuilder;
+import 'date_helpers.dart';
 
 /// View type enumeration
 ///
@@ -25,22 +23,6 @@ enum _FlickerViewType {
   /// Decade view - displays a decade's year grid (currently commented out)
   // decade,
 }
-
-/// Custom day cell builder type
-///
-/// Allows complete customization of individual day cells in the calendar
-/// Provides all necessary state information for custom rendering
-typedef FlickerDayBuilder =
-    Widget Function(
-      int index,
-      DateTime? date, {
-      bool? selected, // Whether this date is selected
-      bool? disabled, // Whether this date is disabled
-      bool? isInRange, // For range mode, whether date is within selected range
-      bool? isRangeStart, // Whether this date is the start of a range
-      bool? isRangeEnd, // Whether this date is the end of a range
-      bool? isToday, // Whether this date is today's date
-    });
 
 /// Flicker Date Picker Widget
 ///
@@ -138,222 +120,78 @@ class Flicker extends StatefulWidget {
 /// Manages the internal state including selected dates, current view type,
 /// display date, and handles all user interactions
 class _FlickerState extends State<Flicker> {
-  final SwipableController _controller = SwipableController();
-  late FlickerModel model;
   late _FlickerViewType _viewType = _FlickerViewType.month;
   late DateTime _display = DateHelpers.maybeToday(null);
-  bool _reachEnd(DateTime date) {
-    if (widget.endDate == null) return true;
-    DateTime endDate = widget.endDate!;
-    return DateHelpers.isSameMonth(date, endDate);
+  final GlobalKey<FlickerMonthViewState> _monthViewKey = GlobalKey();
+
+  int? get _startYear {
+    int? startYear = widget.startDate?.year;
+    if (_endYear != null && startYear != null && _endYear! - startYear == 1) {
+      return startYear - 1;
+    }
+    return startYear;
   }
 
-  bool _reachStart(DateTime date) {
-    if (widget.startDate == null) return false;
-    DateTime startDate = widget.startDate!;
-    return DateHelpers.isSameMonth(date, startDate);
-  }
-
-  bool _canSwipe(DateTime date, SwipeDirection direction) {
-    if (widget.startDate == null && widget.endDate == null) return true;
-    if (direction == SwipeDirection.backward) return !_reachStart(date);
-    if (direction == SwipeDirection.forward) return !_reachEnd(date);
-    return true;
-  }
-
-  void _syncDisplay() {
-    if (model.isEmpty) return;
-    _display = model.first!;
+  int? get _endYear {
+    return widget.endDate?.year;
   }
 
   void _onSelectYear(int year) => setState(() {
     _display = _display.copyWith(year: year);
     _viewType = _FlickerViewType.month;
+    _monthViewKey.currentState?.updateDisplay(_display);
   });
-  void _switchToMonthView() =>
-      setState(() => _viewType = _FlickerViewType.month);
-  void _switchToYearView() => setState(() => _viewType = _FlickerViewType.year);
-  void _onViewChange(DateTime date) => setState(() => _display = date);
-
-  @override
-  void initState() {
-    super.initState();
-    model = FlickerModel(
-      disabled: widget.disabledDate,
-      rebuild: () => setState(() {}),
-      sync: (value) => widget.onValueChange?.call(value),
-    );
-    model.onWidgetUpdate(widget.value, widget.mode);
-    _syncDisplay();
-  }
-
-  @override
-  void didUpdateWidget(covariant Flicker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.mode != widget.mode || oldWidget.value != widget.value) {
-      model.onWidgetUpdate(widget.value, widget.mode);
-      _syncDisplay();
-    }
-  }
-
+  void _showMonthView() => setState(() => _viewType = _FlickerViewType.month);
+  void _showYearView(DateTime date) => setState(() {
+    _display = date;
+    _viewType = _FlickerViewType.year;
+  });
   Size get _size {
-    return Size(
-      maxWidth(widget.scrollDirection!, widget.viewCount!),
-      maxHeight(widget.scrollDirection!, widget.viewCount!),
-    );
+    Axis scrollDirection = widget.scrollDirection!;
+    int viewCount = widget.viewCount != null ? widget.viewCount! : 1;
+
+    double width = scrollDirection == Axis.vertical
+        ? gridViewWidth
+        : gridViewWidth * viewCount;
+
+    double height = scrollDirection == Axis.vertical
+        ? gridViewHeight * viewCount + gridBasicSize * viewCount
+        : gridViewHeight;
+    return Size(width, height);
   }
 
-  Widget _dayBuilder(BuildContext context, DateTime? date, int index) {
-    if (date == null) {
-      return widget.dayBuilder != null
-          ? widget.dayBuilder!(index, null)
-          : SizedBox.shrink();
-    }
-    final selected = model.isContained(date);
-    final isRangeStart = model.inRange(date, 'start');
-    final isRangeEnd = model.inRange(date, 'end');
-    final isInRange = model.inRange(date, 'default');
-    final isDisabled = widget.disabledDate?.call(date) == true;
-    // Use custom builder if provided
-    if (widget.dayBuilder != null) {
-      final child = widget.dayBuilder!(
-        index,
-        date,
-        selected: selected,
-        disabled: isDisabled,
-        isRangeEnd: isRangeEnd,
-        isRangeStart: isRangeStart,
-        isInRange: isInRange,
-      );
-
-      return Tappable(
-        tappable: isDisabled == false,
-        onTap: () => model.change(date),
-        child: child,
-      );
-    }
-
-    // Default day cell styling
-    bool highlight =
-        widget.highlightToday == true &&
-        selected == false &&
-        model.isToday(date);
-    final theme = context.flickerTheme;
-    final decoration = theme.getDayDecoration(
-      selected: selected,
-      disabled: isDisabled,
-      highlight: highlight,
-      inRange: isInRange,
-      isRangeStart: isRangeStart,
-      isRangeEnd: isRangeEnd,
-    );
-
-    TextStyle textStyle = theme.getDayTextStyle(
-      selected,
-      isDisabled,
-      highlight,
-    );
-
-    final container = Container(
-      decoration: decoration,
-      alignment: Alignment.center,
-      child: Text(date.day.toString(), style: textStyle),
-    );
-    return Tappable(
-      tappable: isDisabled == false,
-      onTap: () => model.change(date),
-      child: container,
-    );
-  }
-
-  Widget _swipableBuilder(BuildContext context, DateTime current) {
-    List<List<DateTime?>> grids = DateHelpers.generateGrid(
-      current,
-      context.getFirstDayOfWeek(widget.firstDayOfWeek),
-      widget.viewCount!,
-    );
-
-    final children = grids.map((data) {
-      int index = grids.indexOf(data);
-      final cells = data.map(
-        (date) => _dayBuilder(context, date, data.indexOf(date)),
-      );
-      Widget child = FlickerMonthGridView(children: List.from(cells));
-      if (widget.scrollDirection == Axis.vertical) {
-        if (index == 0) return [FlickerDateTitle(date: (_display)), child];
-        if (index == grids.length - 1) {
-          final title = DateHelpers.nextMonth(_display);
-          return [title, child];
-        }
-      }
-      return [child];
-    });
-    // .expand((x) => x))
-    return Flex(
-      direction: widget.scrollDirection!,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.from(children.expand((x) => x)),
-    );
-  }
-
-  Widget _buildSwipableView() {
-    return SizedBox.fromSize(
-      size: _size,
-      child: FlickerSwipableView(
-        startDate: DateHelpers.maybe6monthFromNow(widget.startDate, 1),
-        endDate: DateHelpers.maybe6monthFromNow(widget.endDate, -1),
-        value: _display,
-        scrollDirection: widget.scrollDirection!,
-        controller: _controller,
-        canSwipe: _canSwipe,
-        onViewChange: _onViewChange,
-        builder: (context, date) => _swipableBuilder(context, date),
-      ),
-    );
+  Size get _yearSize {
+    return Size(gridViewWidth, gridViewHeight + gridBasicSize);
   }
 
   Widget _buildSwipableMonthView() {
-    return Column(
-      children: [
-        _buildMonthControllerView(),
-        _buildWeekView(),
-        _buildSwipableView(),
-      ],
-    );
-  }
-
-  Widget _buildWeekView() {
-    return FlickerWeekView.count(
-      direction: widget.scrollDirection!,
+    return FlickerMonthView(
+      key: _monthViewKey,
+      value: widget.value,
+      mode: widget.mode,
+      startDate: widget.startDate,
+      endDate: widget.endDate,
+      disabledDate: widget.disabledDate,
+      dayBuilder: widget.dayBuilder,
+      highlightToday: widget.highlightToday,
+      scrollDirection: widget.scrollDirection!,
       viewCount: widget.viewCount!,
       firstDayOfWeek: widget.firstDayOfWeek!,
-    );
-  }
-
-  Widget _buildMonthControllerView() {
-    if (widget.scrollDirection == Axis.vertical) return SizedBox.shrink();
-    bool canTap(int step) {
-      if (widget.startDate == null && widget.endDate == null) return true;
-      if (step == 1) return !_reachEnd(_display);
-      if (step == -1) return !_reachStart(_display);
-      return true;
-    }
-
-    return FlickerMonthControllerView(
-      date: _display,
-      viewCount: widget.viewCount!,
-      onTap: (int count) => _controller.slide(count),
-      onTitleTap: _switchToYearView,
-      canTap: canTap,
+      size: _size,
+      onValueChange: widget.onValueChange,
+      onShowYearView: _showYearView,
     );
   }
 
   Widget _buildYearsView() {
+    if (_viewType != _FlickerViewType.year) return SizedBox.shrink();
     return FlickerYearsView(
       date: _display,
       onSelect: _onSelectYear,
-      onTapTitle: _switchToMonthView,
+      onTapTitle: _showMonthView,
+      startYear: _startYear,
+      endYear: _endYear,
+      size: _yearSize,
     );
   }
 
@@ -373,9 +211,8 @@ class _FlickerState extends State<Flicker> {
   }
 
   Widget _builder(BuildContext context) {
-    final theme = context.flickerTheme;
     return Container(
-      decoration: theme.decoration,
+      decoration: context.flickerTheme.decoration,
       padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
       child: SizedBox(width: _size.width, child: _buildStack()),
     );
