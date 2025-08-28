@@ -39,13 +39,13 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   FirstDayOfWeek _firstDayOfWeek = FirstDayOfWeek.monday;
 
   /// Current picker mode for demo
-  PickerMode _flickerMode = PickerMode.single;
+  PickerMode _flickerMode = PickerMode.basic;
 
   /// Number of months to display
   int _viewCount = 1;
 
   /// Minimum selectable date
-  late DateTime? _startDate = DateTime(2025, 1, 31);
+  late DateTime? _startDate = DateTime(1920, 1, 31);
 
   /// Maximum selectable date
   late DateTime? _endDate = DateTime(2025, 9, 1);
@@ -74,7 +74,6 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     if (date.month == 8) {
       return date.day == 14 || date.day == 18;
     }
-
     // Disable weekends (currently disabled for demo purposes)
     // return false;
     return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
@@ -259,14 +258,9 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
 
           if (value == PickerMode.basic) {
             // _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
-            // _startDate = DateTime(2021, 12, 1);
-            // _endDate = DateTime(2026, 9, 2);
-
-            _startDate = null;
-            _endDate = null;
-            // (2025);
+            _startDate = DateTime(1921, 12, 1);
+            _endDate = DateTime(2026, 9, 2);
           }
-
           _flickerMode = value;
         });
       },

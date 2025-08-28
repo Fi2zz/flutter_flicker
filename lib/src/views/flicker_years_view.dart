@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'flicker_shared.dart';
-import 'flicker_swipable_view.dart';
-import 'flicker_extensions.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'flicker_date_title.dart';
+import 'flicker_extensions.dart';
+import 'flicker_shared.dart';
 
 /// Year selection view component
 ///
@@ -27,7 +27,7 @@ class FlickerYearsView extends StatefulWidget {
   /// Size for the component
   final Size size;
 
-  /// Create year selection view
+  /// Creates a year selection view
   ///
   /// - [date]: Current date for context
   /// - [onSelect]: Year selection callback
@@ -52,159 +52,108 @@ class _FlickerYearsViewState extends State<FlickerYearsView> {
   /// Grid column count (4 columns per row)
   static const int _columns = 4;
 
-  /// Edge append page count
-  static const int _preloads = 2;
+  /// Items per page for pagination
+  static const int _itemsPerPage = 20;
 
-  /// Year pages list
-  final List<List<int>> _yearPages = [];
+  /// Paging controller for infinite scroll (using List<int> for rows)
+  late PagingController<int, List<int>> _pagingController;
 
-  /// Swipe controller
-  final SwipeController _controller = SwipeController();
+  /// Scroll controller
+  final ScrollController _scrollController = ScrollController();
 
-  /// Whether it's first layout
-  bool _firstLayout = true;
+  /// All year rows data (pre-generated for efficient scrolling)
+  final List<List<int>> _allYearRows = [];
 
-  /// Loading lock to prevent recursive loading
-  bool _loading = false;
+  @override
+  void initState() {
+    super.initState();
+    // Calculate year range to ensure we can scroll to all valid years
+    // Use startYear if provided, otherwise start from 100 years before current year
+    final startYear = widget.startYear ?? DateTime.now().year - 100;
+    final endYear = widget.endYear ?? DateTime.now().year + 100;
 
-  /// Current page index
-  int _currentPageIndex = 0;
+    // Generate all years and group into rows
+    _generateAllYearRows(startYear, endYear);
 
-  /// Last constraints for dynamic appending
-  late BoxConstraints _lastConstraints;
-
-  /// Calculate row count based on parent constraints
-  ///
-  /// - [constraint]: Parent constraints
-  /// Returns the number of displayable rows
-  int _calcRows(BoxConstraints constraint) {
-    final cellWidth = constraint.maxWidth / _columns;
-    final cellHeight = cellWidth / 2; // 高 = 宽/2
-    return (constraint.maxHeight / cellHeight).floor();
+    // Initialize paging controller with all data
+    _pagingController = PagingController(firstPageKey: 0);
+    _pagingController.addPageRequestListener(_fetchPage);
+    // After initialization, scroll to the current year's position
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToCurrentYear());
   }
 
-  /// Calculate items per page
-  int _perPage(BoxConstraints c) => _calcRows(c) * _columns;
+  /// Generates all year rows from start to end year
+  void _generateAllYearRows(int startYear, int endYear) {
+    final years = <int>[];
 
-  /// Initialize year pages
-  ///
-  /// Calculate initial year range based on parent constraints and date restrictions
-  void _initYearPages(BoxConstraints c) {
-    final now = DateTime.now().year;
-    final perPage = _perPage(c);
-
-    // Calculate year range based on startYear and endYear if provided
-    int startYearValue, endYearValue;
-    if (widget.startYear != null && widget.endYear != null) {
-      startYearValue = widget.startYear! - perPage;
-      endYearValue = widget.endYear! + perPage;
-    } else {
-      // Default range: 3 pages before and after current year
-      startYearValue = now - 3 * perPage;
-      endYearValue = now + 3 * perPage;
+    // Generate all years in the range
+    for (int year = startYear; year <= endYear; year++) {
+      years.add(year);
     }
 
-    debugPrint('startYearValue: $startYearValue, endYearValue: $endYearValue');
-
-    // Generate all years
-    final allYears = List.generate(
-      endYearValue - startYearValue + 1,
-      (i) => startYearValue + i,
-    );
-
-    // Split into pages
-    _yearPages.clear();
-    for (int i = 0; i < allYears.length; i += perPage) {
-      final end = (i + perPage).clamp(0, allYears.length);
-      _yearPages.add(allYears.sublist(i, end));
+    // Group years into rows of _columns
+    _allYearRows.clear();
+    for (int i = 0; i < years.length; i += _columns) {
+      final end = (i + _columns).clamp(0, years.length);
+      _allYearRows.add(years.sublist(i, end));
     }
   }
 
-  /// Calculate default scroll page
-  ///
-  /// Calculate initial page based on current selected year
-  int _targetPage(BoxConstraints c) {
-    final targetYear = widget.date.year;
-
-    // Find which page contains the target year
-    for (int i = 0; i < _yearPages.length; i++) {
-      final page = _yearPages[i];
-      if (page.isNotEmpty &&
-          targetYear >= page.first &&
-          targetYear <= page.last) {
+  /// Finds the row index containing the target year
+  int _findRowIndexForYear(int targetYear) {
+    for (int i = 0; i < _allYearRows.length; i++) {
+      if (_allYearRows[i].contains(targetYear)) {
         return i;
       }
     }
-
-    // If not found, return middle page
-    return (_yearPages.length / 2).floor();
+    return 0; // Default to first row if not found
   }
 
-  /// Append year pages when needed
-  ///
-  /// When user scrolls to boundary, automatically append more years
-  /// If startDate and endDate are set, no appending is done
-  /// - [c]: Parent constraints
-  /// - [prepend]: true for prepending, false for appending
-  void _appendPages(BoxConstraints c, {bool prepend = false}) {
-    if (_loading) return;
+  /// Scrolls to current year's position
+  void _scrollToCurrentYear() {
+    final targetRowIndex = _findRowIndexForYear(widget.date.year);
 
-    // If startYear and endYear are set, disable dynamic appending
-    if (widget.startYear != null && widget.endYear != null) return;
-
-    _loading = true;
-    final perPage = _perPage(c);
-
-    setState(() {
-      if (prepend && _yearPages.isNotEmpty) {
-        final firstYear = _yearPages.first.first;
-        final newPages = <List<int>>[];
-
-        for (int i = 0; i < _preloads; i++) {
-          final pageStartYear = firstYear - (i + 1) * perPage;
-          final pageYears = List.generate(perPage, (j) => pageStartYear + j);
-          newPages.insert(0, pageYears);
-        }
-
-        _yearPages.insertAll(0, newPages);
-        _currentPageIndex += _preloads; // Adjust current index
-      } else if (!prepend && _yearPages.isNotEmpty) {
-        final lastYear = _yearPages.last.last;
-
-        for (int i = 0; i < _preloads; i++) {
-          final pageStartYear = lastYear + 1 + i * perPage;
-          final pageYears = List.generate(perPage, (j) => pageStartYear + j);
-          _yearPages.add(pageYears);
-        }
-      }
-    });
-
-    // Unlock
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loading = false);
-  }
-
-  /// Handle index change from SwipableView
-  void _handleIndexChange(int index) {
-    _currentPageIndex = index;
-
-    // Check if we need to append pages
-    if (index < _preloads) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _appendPages(_lastConstraints, prepend: true);
-      });
-    } else if (index >= _yearPages.length - _preloads) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _appendPages(_lastConstraints, prepend: false);
-      });
+    // Estimate item height and scroll to position
+    final estimatedItemHeight = 60.0; // Approximate height per row
+    final offset = targetRowIndex * estimatedItemHeight;
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(offset);
     }
   }
 
-  /// Check if swipe is allowed
-  bool _canSwipe(int index, SwipeDirection direction) {
-    if (direction == SwipeDirection.forward) {
-      return index < _yearPages.length - 1;
-    } else {
-      return index > 0;
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Fetches page data for infinite scroll pagination
+  void _fetchPage(int pageKey) {
+    try {
+      final rowsPerPage = (_itemsPerPage / _columns).ceil();
+      final startIndex = pageKey * rowsPerPage;
+      final endIndex = (startIndex + rowsPerPage).clamp(0, _allYearRows.length);
+
+      // Check if we've reached the end of data
+      if (startIndex >= _allYearRows.length) {
+        _pagingController.appendLastPage([]);
+        return;
+      }
+
+      final pageRows = _allYearRows.sublist(startIndex, endIndex);
+
+      // Check if this is the last page
+      final isLastPage = endIndex >= _allYearRows.length;
+
+      if (isLastPage) {
+        _pagingController.appendLastPage(pageRows);
+      } else {
+        final nextPageKey = pageKey + 1;
+        _pagingController.appendPage(pageRows, nextPageKey);
+      }
+    } catch (error) {
+      _pagingController.error = error;
     }
   }
 
@@ -213,7 +162,7 @@ class _FlickerYearsViewState extends State<FlickerYearsView> {
     return Column(
       children: [
         SizedBox(
-          width: gridViewWidth,
+          width: widget.size.width,
           height: gridBasicSize,
           child: FlickerDateTitle(
             date: widget.date,
@@ -222,91 +171,82 @@ class _FlickerYearsViewState extends State<FlickerYearsView> {
             showTriangle: true,
           ),
         ),
-        SizedBox(
-          width: gridViewWidth,
-          height: gridViewHeight + gridBasicSize,
-          child: _buildYearGrid(),
-        ),
+        SizedBox.fromSize(size: widget.size, child: _buildYearGrid()),
       ],
     );
   }
 
-  /// Build the year grid component
+  /// Builds the year grid component using PagedListView with custom grid layout
   Widget _buildYearGrid() {
-    // Use LayoutBuilder to get parent constraints
     return LayoutBuilder(
       builder: (context, constraints) {
-        _lastConstraints = constraints;
-
-        // Initialize only on first layout
-        if (_firstLayout) {
-          _initYearPages(constraints);
-          _currentPageIndex = _targetPage(constraints);
-          _firstLayout = false;
-        }
-
-        if (_yearPages.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return SwipableView<List<int>>(
-          items: _yearPages,
-          initialIndex: _currentPageIndex,
-          controller: _controller,
-          scrollDirection: Axis.vertical,
-          onIndexChange: _handleIndexChange,
-          canSwipe: _canSwipe,
-          builder: (context, yearPage) =>
-              _buildPage(context, yearPage, constraints),
+        return PagedListView<int, List<int>>(
+          scrollController: _scrollController,
+          pagingController: _pagingController,
+          padding: EdgeInsets.zero,
+          builderDelegate: PagedChildBuilderDelegate<List<int>>(
+            itemBuilder: (context, yearRow, index) =>
+                _buildGridRow(context, yearRow, constraints),
+          ),
         );
       },
     );
   }
 
-  /// Build single year page grid
-  ///
-  /// - [yearPage]: List of years for this page
-  /// - [constraints]: Parent constraints
-  Widget _buildPage(
+  /// Builds a grid row containing multiple year items
+  Widget _buildGridRow(
     BuildContext context,
-    List<int> yearPage,
+    List<int> yearRow,
     BoxConstraints constraints,
   ) {
-    final theme = context.flickerTheme;
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _columns,
-        childAspectRatio: 2,
-      ),
-      itemCount: yearPage.length,
-      itemBuilder: (_, index) {
-        final year = yearPage[index];
-        final isSelected = year == widget.date.year;
+    final itemWidth = constraints.maxWidth / _columns;
+    final rowItems = <Widget>[];
 
-        // Disable if out of range
-        final isDisabled =
-            widget.startYear != null && year < widget.startYear! ||
-            widget.endYear != null && year > widget.endYear!;
-
-        return Tappable(
-          tappable: isDisabled == false,
-          onTap: () => widget.onSelect(year),
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            decoration: theme.getDayDecoration(
-              selected: isSelected,
-              disabled: isDisabled,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              year.toString(),
-              style: theme.getDayTextStyle(isSelected, isDisabled, null),
-            ),
+    for (int i = 0; i < _columns; i++) {
+      if (i < yearRow.length) {
+        rowItems.add(
+          SizedBox(
+            width: itemWidth,
+            height: gridBasicSize,
+            child: _buildYearItem(context, yearRow[i]),
           ),
         );
-      },
+      } else {
+        // Add empty space for incomplete rows
+        rowItems.add(SizedBox(width: itemWidth, height: gridBasicSize));
+      }
+    }
+
+    return Row(children: rowItems);
+  }
+
+  /// Builds a single year item
+  ///
+  /// - [year]: The year to display
+  Widget _buildYearItem(BuildContext context, int year) {
+    final theme = context.flickerTheme;
+    final isSelected = year == widget.date.year;
+
+    // Disable if year is out of the allowed range
+    final isDisabled =
+        (widget.startYear != null && year < widget.startYear!) ||
+        (widget.endYear != null && year > widget.endYear!);
+
+    return Tappable(
+      tappable: !isDisabled,
+      onTap: () => widget.onSelect(year),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: theme.getDayDecoration(
+          selected: isSelected,
+          disabled: isDisabled,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          year.toString(),
+          style: theme.getDayTextStyle(isSelected, isDisabled, null),
+        ),
+      ),
     );
   }
 }
