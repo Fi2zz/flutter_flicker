@@ -84,6 +84,12 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
               builderDelegate: PagedChildBuilderDelegate<List<int>>(
                 itemBuilder: (context, row, index) =>
                     _buildGridRow(context, row, constraints),
+                firstPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
+                newPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
+                firstPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
+                newPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
+                noItemsFoundIndicatorBuilder: (_) => const SizedBox.shrink(),
+                noMoreItemsIndicatorBuilder: (_) => const SizedBox.shrink(),
               ),
             );
           },

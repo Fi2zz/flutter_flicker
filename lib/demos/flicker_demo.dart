@@ -50,7 +50,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   PickerMode _flickerMode = PickerMode.basic;
 
   /// Current demo view mode
-  DemoViewMode _demoViewMode = DemoViewMode.picker;
+  DemoViewMode _demoViewMode = DemoViewMode.years;
 
   /// Number of months to display
   int _viewCount = 1;
