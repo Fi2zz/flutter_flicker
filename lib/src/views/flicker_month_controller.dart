@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_flicker/src/views/date_helpers.dart';
-// import './flicker.dart';
 
 typedef Selected = List<DateTime>;
 
@@ -15,21 +14,174 @@ enum FlickerSelectionMode {
   many,
 }
 
-typedef SMode = FlickerSelectionMode;
-// void Function(Selected);
+/// Unified controller for Flicker month view
+///
+/// Combines date selection logic and grid generation functionality
+/// into a single cohesive controller class.
+class FlickerMonthController {
+  // ========================================
+  // Selection Related Fields
+  // ========================================
 
-class FlickerMonthModel {
   final ValueChanged<Selected> sync;
   final bool Function(DateTime)? disabled;
   final VoidCallback? rebuild;
-  FlickerMonthModel({required this.sync, required this.disabled, this.rebuild});
   late FlickerSelectionMode mode = FlickerSelectionMode.single;
   late Selected selection = [];
-  bool isToday(DateTime date) {
-    return DateHelpers.isSameDay(date, DateTime.now());
+
+  // ========================================
+  // Grid Generation Fields
+  // ========================================
+
+  /// Date grid data
+  late List<DateTime> _grid;
+
+  /// Last start date used for generation (for caching optimization)
+  DateTime? _lastStartDate;
+
+  /// Last end date used for generation (for caching optimization)
+  DateTime? _lastEndDate;
+
+  // ========================================
+  // Constructor
+  // ========================================
+
+  FlickerMonthController({
+    required this.sync,
+    required this.disabled,
+    this.rebuild,
+  });
+
+  // ========================================
+  // Grid Generation Methods
+  // ========================================
+
+  /// Get the date grid
+  List<DateTime> get grid => _grid;
+
+  /// Generate date grid (internal method)
+  ///
+  /// Uses guard pattern to avoid regenerating identical grids:
+  /// - If start and end dates are the same as last time, skip generation
+  /// - Otherwise call DateHelpers.generateCalendar to generate new grid
+  ///
+  /// [startDate] Grid start date
+  /// [endDate] Grid end date
+  void _generate(DateTime startDate, DateTime endDate) {
+    // Guard: skip generation if parameters haven't changed
+    if (_lastStartDate != null &&
+        _lastEndDate != null &&
+        DateHelpers.isSameMonth(_lastStartDate!, startDate) &&
+        DateHelpers.isSameMonth(_lastEndDate!, endDate)) {
+      return;
+    }
+
+    // Generate new grid and update cache
+    _grid = DateHelpers.generateCalendar(startDate, endDate);
+    _lastStartDate = startDate;
+    _lastEndDate = endDate;
   }
 
+  /// Generate grid based on optional start and end dates
+  ///
+  /// Supports four generation modes:
+  /// 1. Both start and end dates provided: use specified range
+  /// 2. Only start date provided: 6 months forward from start date
+  /// 3. Only end date provided: 6 months backward from end date
+  /// 4. Neither provided: centered around current month, 6 months each direction
+  ///
+  /// [startDate] Optional start date
+  /// [endDate] Optional end date
+  void generate({DateTime? startDate, DateTime? endDate}) {
+    final DateTime start;
+    final DateTime end;
 
+    switch ((startDate != null, endDate != null)) {
+      case (true, true):
+        // Both dates provided
+        start = startDate!;
+        end = endDate!;
+        break;
+      case (true, false):
+        // Only start date provided
+        start = startDate!;
+        end = DateTime(startDate.year, startDate.month + 6);
+        break;
+      case (false, true):
+        // Only end date provided
+        start = DateTime(endDate!.year, endDate.month - 6);
+        end = endDate;
+        break;
+      case (false, false):
+        // Neither provided, use default range
+        final now = DateTime.now();
+        start = DateTime(now.year, now.month - 6);
+        end = DateTime(now.year, now.month + 6);
+        break;
+    }
+
+    _generate(start, end);
+  }
+
+  /// Regenerate grid centered around the specified date
+  ///
+  /// Generates a grid centered around [centerDate], 6 months in each direction
+  ///
+  /// [centerDate] Center date
+  void from(DateTime centerDate) {
+    _generate(
+      DateTime(centerDate.year, centerDate.month - 6),
+      DateTime(centerDate.year, centerDate.month + 6),
+    );
+  }
+
+  // ========================================
+  // Grid Query Methods
+  // ========================================
+
+  /// Find the index of the specified date in the grid
+  ///
+  /// [date] Date to search for, can be null
+  ///
+  /// Returns:
+  /// - Index when found
+  /// - -1 when not found or date is null
+  int findIndex(DateTime? date) {
+    if (date == null) return -1;
+    return _grid.indexWhere((m) => DateHelpers.isSameMonth(m, date));
+  }
+
+  /// Get date by index
+  ///
+  /// [index] Grid index
+  ///
+  /// Returns:
+  /// - Corresponding DateTime when index is valid
+  /// - null when index is invalid
+  DateTime? at(int index) {
+    if (index < 0 || index >= _grid.length) return null;
+    return _grid[index];
+  }
+
+  /// Check if the specified date exists in the grid
+  ///
+  /// [date] Date to check
+  ///
+  /// Returns:
+  /// - true: date exists in the grid
+  /// - false: date does not exist in the grid
+  bool has(DateTime date) {
+    return _grid.any((gridDate) => DateHelpers.isSameMonth(gridDate, date));
+  }
+
+  // ========================================
+  // Selection Logic Methods
+  // ========================================
+
+
+  bool isToday(DateTime date) {
+    return DateHelpers.isToday(date);
+  }
 
   /// Checks if a date falls within a selected range
   ///
@@ -121,7 +273,6 @@ class FlickerMonthModel {
     Selected next = List.from(value);
     if (next.isEmpty) {
       selection = next;
-
       return;
     }
     switch (this.mode) {
@@ -198,7 +349,6 @@ class FlickerMonthModel {
           }
         }
         update(next);
-
         break;
     }
   }

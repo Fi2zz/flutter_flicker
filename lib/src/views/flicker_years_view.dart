@@ -8,14 +8,9 @@ import 'flicker_scrollview.dart';
 /// Combines year selection view with a title header
 /// Used when switching from month view to year view
 class FlickerYearsView extends StatelessWidget {
-  /// Current date for context
-  final DateTime date;
-
   /// Year selection callback
   final ValueChanged<int> onTapYear;
-
-  /// Optional callback for title tap (back to month view)
-  final Function() onTapTitle;
+  final int value;
 
   /// Minimum selectable year
   final int startYear;
@@ -31,29 +26,29 @@ class FlickerYearsView extends StatelessWidget {
   ///
   /// - [date]: Current date for context
   /// - [onTapYear]: Year selection callback
-  /// - [onTapTitle]: Optional callback for title tap (back to month view)
   /// - [startYear]: Minimum selectable year
   /// - [endYear]: Maximum selectable year
   /// - [size]: Size for the component
   const FlickerYearsView({
     super.key,
-    required this.date,
     required this.onTapYear,
-    required this.onTapTitle,
     required this.size,
     required this.itemHeight,
     required this.startYear,
     required this.endYear,
+    required this.value,
   });
 
+  bool _selected(int year) => year == value;
+  bool _disabled(int year) => year < startYear || year > endYear;
   @override
   Widget build(BuildContext context) {
     return SizedBox.fromSize(
       size: size,
-      child: PaginationView(
+      child: FlickerScrollView(
         startValue: startYear,
         endValue: endYear,
-        initialValue: date.year,
+        initialValue: value,
         itemHeight: itemHeight,
         itemBuilder: (context, year, index) {
           return Year(
@@ -65,14 +60,6 @@ class FlickerYearsView extends StatelessWidget {
         },
       ),
     );
-  }
-
-  bool _selected(int year) {
-    return year == date.year;
-  }
-
-  bool _disabled(int year) {
-    return year < startYear || year > endYear;
   }
 }
 

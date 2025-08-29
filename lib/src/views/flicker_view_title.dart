@@ -7,7 +7,7 @@ import 'flicker_extensions.dart';
 ///
 /// Displays the current month and year, optionally making it tappable
 /// to switch between month and year views
-class FlickerDateTitle extends StatelessWidget {
+class FlickerViewTitle extends StatelessWidget {
   /// The date to display in the title
   final DateTime date;
 
@@ -17,17 +17,23 @@ class FlickerDateTitle extends StatelessWidget {
 
   /// Whether to show rotation indicator (triangle)
   final bool? roate;
+  final bool? centerred;
 
   /// Whether to show the triangle indicator
   final bool showTriangle;
 
-  const FlickerDateTitle({
+  /// Optional flex parameter
+  final int? flex;
+
+  const FlickerViewTitle({
     super.key,
     required this.date,
     this.onTap,
     this.roate = false,
     this.padding,
     this.showTriangle = true,
+    this.flex,
+    this.centerred = false,
   });
 
   /// Formats a date as month/year string based on locale
@@ -62,6 +68,10 @@ class FlickerDateTitle extends StatelessWidget {
       );
     }
 
-    return Container(padding: padding, child: child);
+    Widget containerChild = Container(padding: padding, child: child);
+
+    if (centerred == true) containerChild = Center(child: containerChild);
+    if (flex != null) return Expanded(flex: flex!, child: containerChild);
+    return containerChild;
   }
 }

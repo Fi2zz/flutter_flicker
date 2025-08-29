@@ -1,163 +1,11 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/views/flicker_month_controller_view.dart';
-import 'package:flutter_flicker/src/views/flicker_month_model.dart';
-import 'package:flutter_flicker/src/views/flicker_date_title.dart';
+import 'package:flutter_flicker/src/views/flicker_month_controller.dart';
+import 'package:flutter_flicker/src/views/flicker_view_title.dart';
 import 'package:flutter_flicker/src/views/flicker_swipable_view.dart';
 import 'package:flutter_flicker/src/views/flicker_week_view.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'package:flutter_flicker/src/views/date_helpers.dart';
 import 'flicker_extensions.dart';
-
-// ============================================================================
-// GRID GENERATOR
-// ============================================================================
-
-/// Date grid generator
-///
-/// Manages calendar grid generation logic, including:
-/// - Generating date grids based on start and end dates
-/// - Caching generation results to avoid redundant calculations
-/// - Providing grid query and manipulation methods
-class GridGenerator {
-  // ========================================
-  // Private Fields
-  // ========================================
-
-  /// Date grid data
-  late List<DateTime> _grid;
-
-  /// Last start date used for generation (for caching optimization)
-  DateTime? _lastStartDate;
-
-  /// Last end date used for generation (for caching optimization)
-  DateTime? _lastEndDate;
-
-  // ========================================
-  // Public Interface
-  // ========================================
-
-  /// Get the date grid
-  List<DateTime> get grid => _grid;
-
-  // ========================================
-  // Grid Generation Methods
-  // ========================================
-
-  /// Generate date grid (internal method)
-  ///
-  /// Uses guard pattern to avoid regenerating identical grids:
-  /// - If start and end dates are the same as last time, skip generation
-  /// - Otherwise call DateHelpers.generateCalendar to generate new grid
-  ///
-  /// [startDate] Grid start date
-  /// [endDate] Grid end date
-  void _generate(DateTime startDate, DateTime endDate) {
-    // Guard: skip generation if parameters haven't changed
-    if (_lastStartDate != null &&
-        _lastEndDate != null &&
-        DateHelpers.isSameMonth(_lastStartDate!, startDate) &&
-        DateHelpers.isSameMonth(_lastEndDate!, endDate)) {
-      return;
-    }
-
-    // Generate new grid and update cache
-    _grid = DateHelpers.generateCalendar(startDate, endDate);
-    _lastStartDate = startDate;
-    _lastEndDate = endDate;
-  }
-
-  /// Generate grid based on optional start and end dates
-  ///
-  /// Supports four generation modes:
-  /// 1. Both start and end dates provided: use specified range
-  /// 2. Only start date provided: 6 months forward from start date
-  /// 3. Only end date provided: 6 months backward from end date
-  /// 4. Neither provided: centered around current month, 6 months each direction
-  ///
-  /// [startDate] Optional start date
-  /// [endDate] Optional end date
-  void generate({DateTime? startDate, DateTime? endDate}) {
-    final DateTime start;
-    final DateTime end;
-
-    switch ((startDate != null, endDate != null)) {
-      case (true, true):
-        // Both dates provided
-        start = startDate!;
-        end = endDate!;
-        break;
-      case (true, false):
-        // Only start date provided
-        start = startDate!;
-        end = DateTime(startDate.year, startDate.month + 6);
-        break;
-      case (false, true):
-        // Only end date provided
-        start = DateTime(endDate!.year, endDate.month - 6);
-        end = endDate;
-        break;
-      case (false, false):
-        // Neither provided, use default range
-        final now = DateTime.now();
-        start = DateTime(now.year, now.month - 6);
-        end = DateTime(now.year, now.month + 6);
-        break;
-    }
-
-    _generate(start, end);
-  }
-
-  /// Regenerate grid centered around the specified date
-  ///
-  /// Generates a grid centered around [centerDate], 6 months in each direction
-  ///
-  /// [centerDate] Center date
-  void from(DateTime centerDate) {
-    _generate(
-      DateTime(centerDate.year, centerDate.month - 6),
-      DateTime(centerDate.year, centerDate.month + 6),
-    );
-  }
-
-  // ========================================
-  // Grid Query Methods
-  // ========================================
-
-  /// Find the index of the specified date in the grid
-  ///
-  /// [date] Date to search for, can be null
-  ///
-  /// Returns:
-  /// - Index when found
-  /// - -1 when not found or date is null
-  int findIndex(DateTime? date) {
-    if (date == null) return -1;
-    return _grid.indexWhere((m) => DateHelpers.isSameMonth(m, date));
-  }
-
-  /// Get date by index
-  ///
-  /// [index] Grid index
-  ///
-  /// Returns:
-  /// - Corresponding DateTime when index is valid
-  /// - null when index is invalid
-  DateTime? at(int index) {
-    if (index < 0 || index >= _grid.length) return null;
-    return _grid[index];
-  }
-
-  /// Check if the specified date exists in the grid
-  ///
-  /// [date] Date to check
-  ///
-  /// Returns:
-  /// - true: date exists in the grid
-  /// - false: date does not exist in the grid
-  bool has(DateTime date) {
-    return _grid.any((gridDate) => DateHelpers.isSameMonth(gridDate, date));
-  }
-}
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -300,13 +148,10 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   // ========================================
 
   /// Swipe controller
-  final SwipeController _controller = SwipeController();
+  final SwipeController _swipeController = SwipeController();
 
-  /// Month view data model
-  late FlickerMonthModel _model;
-
-  /// Grid generator
-  final GridGenerator _gridGenerator = GridGenerator();
+  /// Month controller (combines model and grid generator)
+  late FlickerMonthController _controller;
 
   /// Currently displayed date
   late DateTime _display = _extractDisplay();
@@ -319,15 +164,15 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   void initState() {
     super.initState();
 
-    // Initialize data model
-    _model = FlickerMonthModel(
+    // Initialize month controller
+    _controller = FlickerMonthController(
       disabled: widget.disabledDate,
       rebuild: () => setState(() {}),
       sync: (value) => widget.onValueChange?.call(value),
     );
 
     // Sync component state
-    _model.onWidgetUpdate(widget.value, widget.mode);
+    _controller.onWidgetUpdate(widget.value, widget.mode);
     _display = _extractDisplay();
 
     // Initialize grid
@@ -340,7 +185,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
     // Check if selection mode or value changed
     if (oldWidget.mode != widget.mode || oldWidget.value != widget.value) {
-      _model.onWidgetUpdate(widget.value, widget.mode);
+      _controller.onWidgetUpdate(widget.value, widget.mode);
       _display = _extractDisplay();
     }
 
@@ -380,10 +225,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
   /// Generate date grid
   void _generateGrid() {
-    _gridGenerator.generate(
-      startDate: widget.startDate,
-      endDate: widget.endDate,
-    );
+    _controller.generate(startDate: widget.startDate, endDate: widget.endDate);
   }
 
   // ========================================
@@ -449,16 +291,16 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   ///
   /// [index] New index
   void _handleIndexChange(int index) {
-    final date = _gridGenerator.at(index);
+    final date = _controller.at(index);
     if (date == null) return;
 
     // Check if date range needs to be expanded
-    if (index == 0 || index == _gridGenerator.grid.length - 1) {
+    if (index == 0 || index == _controller.grid.length - 1) {
       // Use post-frame callback to avoid calling setState during build
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => setState(() {
-          _gridGenerator.from(date);
-          final has = _gridGenerator.has(date);
+          _controller.from(date);
+          final has = _controller.has(date);
           if (has) _display = date;
         }),
       );
@@ -480,7 +322,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   /// - true: can swipe to this index
   /// - false: cannot swipe to this index
   bool _handleCanSwipe(int nextIndex, SwipeDirection direction) {
-    final nextDate = _gridGenerator.at(nextIndex);
+    final nextDate = _controller.at(nextIndex);
     return nextDate != null && _canSwipe(nextDate, direction);
   }
 
@@ -504,10 +346,10 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     }
 
     // Get date state
-    final selected = _model.isContained(date);
-    final isRangeStart = _model.inRange(date, 'start');
-    final isRangeEnd = _model.inRange(date, 'end');
-    final isInRange = _model.inRange(date, 'default');
+    final selected = _controller.isContained(date);
+    final isRangeStart = _controller.inRange(date, 'start');
+    final isRangeEnd = _controller.inRange(date, 'end');
+    final isInRange = _controller.inRange(date, 'default');
     final isDisabled = widget.disabledDate?.call(date) == true;
 
     // Use custom builder if provided
@@ -524,7 +366,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
       return Tappable(
         tappable: isDisabled == false,
-        onTap: () => _model.change(date),
+        onTap: () => _controller.change(date),
         child: child,
       );
     }
@@ -533,7 +375,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     bool highlight =
         widget.highlightToday == true &&
         selected == false &&
-        _model.isToday(date);
+        _controller.isToday(date);
 
     final theme = context.flickerTheme;
     final decoration = theme.getDayDecoration(
@@ -559,7 +401,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
     return Tappable(
       tappable: isDisabled == false,
-      onTap: () => _model.change(date),
+      onTap: () => _controller.change(date),
       child: container,
     );
   }
@@ -602,14 +444,16 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
       // Add date title for vertical scrolling
       if (widget.scrollDirection == Axis.vertical) {
-        if (index == 0) return [FlickerDateTitle(date: _display), child];
+        if (index == 0) return [FlickerViewTitle(date: _display), child];
         if (index == grids.length - 1) {
           final title = DateHelpers.nextMonth(_display);
-          return [FlickerDateTitle(date: title), child];
+          return [FlickerViewTitle(date: title), child];
         }
       }
       return [child];
     });
+
+    debugPrint('widget.scrollDirection: ${widget.scrollDirection}');
 
     return Flex(
       direction: widget.scrollDirection,
@@ -628,10 +472,10 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     return SizedBox.fromSize(
       size: widget.size,
       child: SwipableView<DateTime>(
-        items: _gridGenerator.grid,
-        initialIndex: _gridGenerator.findIndex(_display),
+        items: _controller.grid,
+        initialIndex: _controller.findIndex(_display),
         scrollDirection: widget.scrollDirection,
-        controller: _controller,
+        controller: _swipeController,
         canSwipe: _handleCanSwipe,
         onIndexChange: _handleIndexChange,
         builder: (context, date) => _swipableBuilder(context, date),
@@ -648,24 +492,106 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     );
   }
 
+  /// Compute whether to show triangle based on date range
+  bool _computeShowTriangle() {
+    DateTime? startDate = widget.startDate;
+    DateTime? endDate = widget.endDate;
+    bool noRange = startDate == null && endDate == null;
+    return noRange == false && startDate!.year != endDate!.year;
+  }
+
+  /// Build left and right chevron controls
+  Map<String, Widget> _buildChevronControls() {
+    Widget left = Chevron.left(
+      touchable: _canTap(SwipeDirection.backward),
+      onTap: () => _swipeController.slide(widget.viewCount * -1),
+    );
+    Widget right = Chevron.right(
+      touchable: _canTap(SwipeDirection.forward),
+      onTap: () => _swipeController.slide(widget.viewCount),
+    );
+    return {'left': left, 'right': right};
+  }
+
+  /// Build title widget with specified parameters
+  Widget _buildTitleWidget({
+    required DateTime date,
+    bool showTriangle = false,
+    VoidCallback? onTap,
+    int flex = 1,
+    bool centerred = false,
+  }) {
+    return FlickerViewTitle(
+      date: date,
+      onTap: onTap,
+      roate: false,
+      showTriangle: showTriangle,
+      flex: flex,
+      centerred: centerred,
+    );
+  }
+
+  /// Build single view layout
+  Widget _buildSingleView(Widget left, Widget right) {
+    bool showTriangle = _computeShowTriangle();
+
+    return Row(
+      children: [
+        _buildTitleWidget(
+          date: _display,
+          showTriangle: showTriangle,
+          onTap: showTriangle ? () => widget.onShowYearView(_display) : null,
+          flex: 4,
+        ),
+        left,
+        right,
+      ],
+    );
+  }
+
+  /// Build double view layout
+  Widget _buildDoubleView(Widget left, Widget right) {
+    return Row(
+      children: [
+        SizedBox(
+          width: gridViewWidth,
+          height: gridBasicSize,
+          child: Row(
+            children: [
+              left,
+              _buildTitleWidget(date: _display, centerred: true),
+              SizedBox.shrink(),
+            ],
+          ),
+        ),
+        SizedBox(
+          width: gridViewWidth,
+          height: gridBasicSize,
+          child: Row(
+            children: [
+              SizedBox.shrink(),
+              _buildTitleWidget(
+                date: DateHelpers.nextMonth(_display),
+                centerred: true,
+              ),
+              right,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Build month controller view component
   Widget _buildMonthControllerView() {
     // Don't show controller for vertical scrolling
     if (widget.scrollDirection == Axis.vertical) return SizedBox.shrink();
-
-    DateTime? startDate = widget.startDate;
-    DateTime? endDate = widget.endDate;
-    bool noRange = startDate == null && endDate == null;
-    bool showTriangle = noRange == false && startDate!.year != endDate!.year;
-
-    return FlickerMonthControllerView(
-      date: _display,
-      viewCount: widget.viewCount,
-      onTap: _controller.slide,
-      onTitleTap: () => widget.onShowYearView(_display),
-      canTap: _canTap,
-      showTriangle: showTriangle,
-    );
+    Map<String, Widget> chevrons = _buildChevronControls();
+    Widget left = chevrons['left']!;
+    Widget right = chevrons['right']!;
+    return widget.viewCount == 1
+        ? _buildSingleView(left, right)
+        : _buildDoubleView(left, right);
   }
 
   @override

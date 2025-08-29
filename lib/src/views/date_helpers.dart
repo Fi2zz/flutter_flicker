@@ -42,6 +42,10 @@ class DateHelpers {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
+  static bool isToday(DateTime date) {
+    return isSameDay(date, getToday());
+  }
+
   /// Calculates a date 6 months in the future or past
   ///
   /// [date] - Starting date (uses today if null)

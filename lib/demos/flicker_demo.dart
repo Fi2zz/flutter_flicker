@@ -388,7 +388,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       mode: FlickerSelectionMode.single,
       firstDayOfWeek: _firstDayOfWeek,
       viewCount: _viewCount,
-      scrollDirection: Axis.horizontal,
+      scrollDirection: _axis,
     );
   }
 
@@ -434,6 +434,15 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         _selectedDates.isEmpty
             ? 'No Selected'
             : ' ${_selectedDates.map((e) => _formatDate(e)).join(', ')}',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFFFFFFFF),
+        ),
+      ),
+      SizedBox(width: 16),
+      Text(
+        "$_axis",
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,

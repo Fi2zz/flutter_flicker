@@ -1,5 +1,3 @@
-// export 'data_manager.dart';
-// export 'pagination_view.dart';
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/views/flicker_scrollview_data_manager.dart';
@@ -9,7 +7,7 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 ///
 /// Provides a reusable infinite scroll pagination view with grid layout
 /// specifically designed for integer ranges (e.g., years, numbers).
-class PaginationView extends StatefulWidget {
+class FlickerScrollView extends StatefulWidget {
   /// Start value of the integer range (inclusive)
   final int startValue;
 
@@ -32,7 +30,7 @@ class PaginationView extends StatefulWidget {
   /// - [initialValue]: Target value to scroll to initially
   /// - [itemBuilder]: Builder function for individual grid items
   /// - [itemHeight]: Height of each grid item
-  const PaginationView({
+  const FlickerScrollView({
     super.key,
     required this.startValue,
     required this.endValue,
@@ -42,10 +40,10 @@ class PaginationView extends StatefulWidget {
   });
 
   @override
-  State<PaginationView> createState() => _PaginationViewState();
+  State<FlickerScrollView> createState() => _FlickerScrollViewState();
 }
 
-class _PaginationViewState extends State<PaginationView> {
+class _FlickerScrollViewState extends State<FlickerScrollView> {
   late ScrollController _scrollController;
   late DataManager _dataManager;
 

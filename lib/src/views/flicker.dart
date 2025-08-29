@@ -1,13 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/theme/theme.dart';
-import 'package:flutter_flicker/src/views/flicker_date_title.dart';
+import 'package:flutter_flicker/src/views/flicker_view_title.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'package:flutter_flicker/src/views/flicker_month_view.dart';
-import 'package:flutter_flicker/src/views/flicker_month_model.dart';
+import 'package:flutter_flicker/src/views/flicker_month_controller.dart';
 import 'package:flutter_flicker/src/views/flicker_fade_view.dart';
 import 'package:flutter_flicker/src/views/flicker_years_view.dart';
 import 'flicker_extensions.dart';
-export 'flicker_month_model.dart' show FlickerSelectionMode;
+export 'flicker_month_controller.dart' show FlickerSelectionMode;
 export './flicker_month_view.dart' show FlickerDayBuilder;
 import 'date_helpers.dart';
 
@@ -89,7 +89,7 @@ class Flicker extends StatefulWidget {
   /// [viewCount] - Number of months to display (1 or 2)
   /// [highlightToday] - Whether to highlight today's date
   /// [scrollDirection] - Horizontal or vertical scrolling
-  const Flicker({
+  Flicker({
     super.key,
     this.mode = FlickerSelectionMode.single,
     this.value = const [],
@@ -100,17 +100,24 @@ class Flicker extends StatefulWidget {
     this.dayBuilder,
     this.firstDayOfWeek = FirstDayOfWeek.monday,
     this.theme,
-    this.viewCount = 1,
+    int? viewCount = 1,
     this.highlightToday,
-    this.scrollDirection = Axis.horizontal,
-  }) : assert(
-         viewCount == null || viewCount == 1 || viewCount == 2,
-         'viewCount must be 1 or 2',
-       ),
-       assert(
-         scrollDirection != Axis.vertical || viewCount == 2,
-         'When scrollDirection is Axis.vertical, viewCount must be 2',
-       );
+    Axis? scrollDirection = Axis.horizontal,
+  }) : viewCount = _normalizeViewCount(viewCount, scrollDirection),
+       scrollDirection = scrollDirection ?? Axis.horizontal;
+
+  /// Normalize viewCount based on scrollDirection
+  static int _normalizeViewCount(int? viewCount, Axis? scrollDirection) {
+    // If scrollDirection is vertical, viewCount must be 2
+    if (scrollDirection == Axis.vertical) {
+      return 2;
+    }
+    // If viewCount is not 1 or 2, convert to 1
+    if (viewCount != 1 && viewCount != 2) {
+      return 1;
+    }
+    return viewCount ?? 1;
+  }
 
   @override
   State<Flicker> createState() => _FlickerState();
@@ -185,9 +192,8 @@ class _FlickerState extends State<Flicker> {
     if (_viewType != _FlickerViewType.year) return SizedBox.shrink();
 
     Widget yearView = FlickerYearsView(
-      date: _display,
+      value: _display.year,
       onTapYear: _onSelectYear,
-      onTapTitle: _showMonthView,
       startYear: _startYear,
       endYear: _endYear,
       size: _yearSize,
@@ -196,7 +202,7 @@ class _FlickerState extends State<Flicker> {
     Widget title = SizedBox(
       width: _yearSize.width,
       height: gridBasicSize,
-      child: FlickerDateTitle(
+      child: FlickerViewTitle(
         date: _display,
         onTap: _showMonthView,
         roate: true,

@@ -36,11 +36,6 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
     });
   }
 
-  /// Handles title tap (placeholder for navigation back)
-  void _onTitleTap() {
-    // In a real app, this would navigate back to month view
-    debugPrint('Title tapped - would navigate back to month view');
-  }
 
   /// Formats date for display
   String _formatDate(DateTime date) {
@@ -59,12 +54,11 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
           Container(
             color: CupertinoColors.white,
             child: FlickerYearsView(
-              date: _selectedDate,
               startYear: _startYear,
+              value: _selectedDate.year,
               endYear: _endYear,
               size: _viewSize,
               onTapYear: _onYearSelected,
-              onTapTitle: _onTitleTap,
               itemHeight: gridBasicSize,
             ),
           ),
