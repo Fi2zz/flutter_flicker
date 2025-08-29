@@ -65,6 +65,26 @@ class DataManager<T> {
       },
       fetchPage: _fetchPage,
     );
+    
+    // Preload first page to avoid loading state
+    _preloadFirstPage();
+  }
+  
+  /// Preloads the first page of data to avoid initial loading state
+  void _preloadFirstPage() {
+    try {
+      final firstPageData = generatePageRows(0);
+      // Directly set the first page data without triggering loading state
+      _pagingController.value = _pagingController.value.copyWith(
+        pages: [firstPageData],
+        keys: [0],
+        hasNextPage: totalDataRows > rowsPerPage,
+        isLoading: false,
+        error: null,
+      );
+    } catch (error) {
+      // If preloading fails, let the normal loading process handle it
+    }
   }
 
   /// Ensures data is generated and cached
