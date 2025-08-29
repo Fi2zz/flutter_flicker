@@ -52,6 +52,9 @@ class FlickThemeData {
   /// Text style for title/header text
   final TextStyle titleTextStyle;
 
+  /// Whether to highlight today's date
+  final bool highlightToday;
+
   /// Theme identifier name (e.g., 'light', 'dark')
   final String name;
 
@@ -80,6 +83,7 @@ class FlickThemeData {
     TextStyle? daySelectedTextStyle,
     TextStyle? dayHighlightTextStyle,
     TextStyle? titleTextStyle,
+    bool? highlightToday,
     String? name,
     Brightness? brightness,
   }) {
@@ -98,9 +102,10 @@ class FlickThemeData {
       daySelectedTextStyle: daySelectedTextStyle ?? this.daySelectedTextStyle,
       dayHighlightTextStyle:
           dayHighlightTextStyle ?? this.dayHighlightTextStyle,
+      titleTextStyle: titleTextStyle ?? this.titleTextStyle,
+      highlightToday: highlightToday ?? this.highlightToday,
       name: name ?? this.name,
       brightness: brightness ?? this.brightness,
-      titleTextStyle: titleTextStyle ?? this.titleTextStyle,
     );
   }
 
@@ -121,6 +126,7 @@ class FlickThemeData {
     required this.dayDisabledTextStyle,
     required this.daySelectedTextStyle,
     required this.dayHighlightTextStyle,
+    this.highlightToday = true,
     required this.name,
     required this.brightness,
   });
@@ -139,6 +145,7 @@ class FlickThemeData {
       daySelectedTextStyle: ThemeConstants.lightDaySelectedStyle,
       dayHighlightTextStyle: ThemeConstants.lightDayHighlightStyle,
       titleTextStyle: ThemeConstants.lightTitleStyle,
+      highlightToday: true,
       name: 'light',
       brightness: Brightness.light,
     );
@@ -158,6 +165,7 @@ class FlickThemeData {
       daySelectedTextStyle: ThemeConstants.darkDaySelectedStyle,
       dayHighlightTextStyle: ThemeConstants.darkDayHighlightStyle,
       titleTextStyle: ThemeConstants.darkTitleStyle,
+      highlightToday: true,
       name: 'dark',
       brightness: Brightness.dark,
     );

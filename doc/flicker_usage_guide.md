@@ -123,7 +123,7 @@ class _SingleDatePickerState extends State<SingleDatePicker> {
               selectedDate = dates.isNotEmpty ? dates.first : null;
             });
           },
-          highlightToday: true,
+    
         ),
         
         // Display selected date
@@ -207,7 +207,7 @@ class _DateRangePickerState extends State<DateRangePicker> {
           mode: FlickerSelectionMode.range,
           value: selectedRange,
           onValueChange: _updateRange,
-          highlightToday: true,
+  
           theme: FlickTheme(useDarkMode: false),
         ),
         
@@ -320,7 +320,7 @@ class _MultipleDatePickerState extends State<MultipleDatePicker> {
           mode: FlickerSelectionMode.many,
           value: selectedDates,
           onValueChange: _updateSelection,
-          highlightToday: true,
+      
         ),
         
         // Selection counter
@@ -547,7 +547,7 @@ class _CustomDayBuilderExampleState extends State<CustomDayBuilderExample> {
               selectedDates = dates;
             });
           },
-          highlightToday: true,
+
         ),
         
         // Legend
@@ -696,7 +696,7 @@ class _DateConstraintsExampleState extends State<DateConstraintsExample> {
               selectedDates = dates;
             });
           },
-          highlightToday: true,
+  
         ),
         
         // Constraints information
@@ -848,6 +848,18 @@ class _ThemeCustomizationExampleState extends State<ThemeCustomizationExample> {
         ),
       ),
     },
+    {
+      'name': 'No Today Highlight',
+      'theme': FlickTheme(
+        custom: FlickThemeData.custom(
+          primaryColor: Colors.blue,
+          selectedColor: Colors.blue,
+          backgroundColor: Colors.blue.withOpacity(0.05),
+          textColor: Colors.blue[800],
+          highlightToday: false, // Disable today highlighting
+        ),
+      ),
+    },
   ];
 
   @override
@@ -905,7 +917,7 @@ class _ThemeCustomizationExampleState extends State<ThemeCustomizationExample> {
               selectedDates = dates;
             });
           },
-          highlightToday: true,
+    
           viewCount: 1,
         ),
         
@@ -1035,7 +1047,7 @@ class _InternationalizationExampleState extends State<InternationalizationExampl
                     selectedDates = dates;
                   });
                 },
-                highlightToday: true,
+            
               ),
               
               // Localization information
@@ -1236,7 +1248,7 @@ class _MultiMonthExampleState extends State<MultiMonthExample> {
               selectedRange = dates;
             });
           },
-          highlightToday: true,
+       
         ),
         
         // Benefits explanation
@@ -1365,7 +1377,6 @@ class _ScrollDirectionExampleState extends State<ScrollDirectionExample> {
                 selectedDates = dates;
               });
             },
-            highlightToday: true,
           ),
         ),
         
@@ -1515,7 +1526,6 @@ class _FirstDayOfWeekExampleState extends State<FirstDayOfWeekExample> {
               selectedDates = dates;
             });
           },
-          highlightToday: true,
         ),
         
         // Current configuration info
@@ -1732,7 +1742,6 @@ class _EventCalendarState extends State<EventCalendar> {
               selectedDates = dates;
             });
           },
-          highlightToday: true,
         ),
         
         // Selected date events
@@ -2043,7 +2052,6 @@ class _BookingSystemState extends State<BookingSystem> {
           dayBuilder: bookingDayBuilder,
           disabledDate: isDateDisabled,
           onValueChange: _updateBooking,
-          highlightToday: true,
           viewCount: 2,
         ),
         
@@ -2307,7 +2315,6 @@ class _DateRangeFilterState extends State<DateRangeFilter> {
                     mode: FlickerSelectionMode.range,
                     value: selectedRange,
                     onValueChange: _applyDateFilter,
-                    highlightToday: true,
                     theme: FlickTheme(useDarkMode: false),
                   ),
                   

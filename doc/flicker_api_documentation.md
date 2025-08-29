@@ -44,7 +44,7 @@ Flicker({
   FirstDayOfWeek? firstDayOfWeek = FirstDayOfWeek.monday,
   FlickTheme? theme,
   int? viewCount = 1,
-  bool? highlightToday,
+
   Axis? scrollDirection = Axis.horizontal,
 })
 ```
@@ -63,7 +63,7 @@ Flicker({
 | `firstDayOfWeek` | `FirstDayOfWeek?` | `FirstDayOfWeek.monday` | Which day appears as the first column |
 | `theme` | `FlickTheme?` | `null` | Custom theme configuration |
 | `viewCount` | `int?` | `1` | Number of months to display simultaneously (1 or 2) |
-| `highlightToday` | `bool?` | `null` | Whether to highlight today's date |
+
 | `scrollDirection` | `Axis?` | `Axis.horizontal` | Scroll direction (horizontal or vertical) |
 
 #### Key Features
@@ -487,6 +487,7 @@ FlickThemeData.custom({
 | `dayTextStyle` | `TextStyle` | Base text style for day cells |
 | `headerTextStyle` | `TextStyle` | Text style for headers |
 | `decoration` | `BoxDecoration` | Container decoration |
+| `highlightToday` | `bool` | Whether to highlight today's date (default: true) |
 
 #### Methods
 
@@ -575,7 +576,7 @@ class _BasicDatePickerState extends State<BasicDatePicker> {
                 selectedDates = dates;
               });
             },
-            highlightToday: true,
+        
           ),
           if (selectedDates.isNotEmpty)
             Padding(
@@ -749,7 +750,7 @@ class _CustomStyledDatePickerState extends State<CustomStyledDatePicker> {
           });
         },
         firstDayOfWeek: FirstDayOfWeek.monday,
-        highlightToday: true,
+
       ),
     );
   }

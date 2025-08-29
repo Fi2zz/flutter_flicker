@@ -120,7 +120,6 @@ Flicker(
     print('Selected date: ${dates.first}');
   },
   theme: FlickTheme(useDarkMode: false),
-  highlightToday: true,
   firstDayOfWeek: FirstDayOfWeek.monday,
 )
 ```
@@ -178,7 +177,7 @@ Flicker(
   scrollDirection: Axis.vertical,
   viewCount: 2,
   theme: FlickTheme(useDarkMode: true),
-  highlightToday: true,
+  
   firstDayOfWeek: FirstDayOfWeek.locale,
 )
 ```
@@ -199,7 +198,7 @@ The main date picker widget with comprehensive customization options.
 | `endDate` | `DateTime` | Maximum selectable date | Required |
 | `onValueChange` | `Function(List<DateTime>)` | Callback when selection changes | Required |
 | `theme` | `FlickTheme` | Theme configuration for styling | `FlickTheme()` |
-| `highlightToday` | `bool` | Whether to highlight today's date | `false` |
+
 | `firstDayOfWeek` | `FirstDayOfWeek` | First day of the week | `FirstDayOfWeek.monday` |
 | `viewCount` | `int` | Number of months to display (1 or 2) | `1` |
 | `scrollDirection` | `Axis` | Scroll direction (horizontal/vertical) | `Axis.horizontal` |

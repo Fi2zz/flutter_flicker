@@ -70,8 +70,7 @@ class Flicker extends StatefulWidget {
   /// Number of months to display simultaneously (1 or 2)
   final int? viewCount;
 
-  /// Whether to highlight today's date
-  final bool? highlightToday;
+
 
   /// Scroll direction - horizontal or vertical
   final Axis? scrollDirection;
@@ -88,7 +87,7 @@ class Flicker extends StatefulWidget {
   /// [firstDayOfWeek] - Which day appears as first column
   /// [theme] - Custom theme configuration
   /// [viewCount] - Number of months to display (1 or 2)
-  /// [highlightToday] - Whether to highlight today's date
+
   /// [scrollDirection] - Horizontal or vertical scrolling
   Flicker({
     super.key,
@@ -102,7 +101,7 @@ class Flicker extends StatefulWidget {
     this.firstDayOfWeek = FirstDayOfWeek.monday,
     this.theme,
     int? viewCount = 1,
-    this.highlightToday,
+
     Axis? scrollDirection = Axis.horizontal,
   }) : viewCount = _normalizeViewCount(viewCount, scrollDirection),
        scrollDirection = scrollDirection ?? Axis.horizontal;
@@ -179,7 +178,7 @@ class _FlickerState extends State<Flicker> {
       endDate: widget.endDate,
       disabledDate: widget.disabledDate,
       dayBuilder: widget.dayBuilder,
-      highlightToday: widget.highlightToday,
+
       scrollDirection: widget.scrollDirection!,
       viewCount: widget.viewCount!,
       firstDayOfWeek: widget.firstDayOfWeek!,

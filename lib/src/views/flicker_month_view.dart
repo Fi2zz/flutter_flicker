@@ -88,9 +88,6 @@ class FlickerMonthView extends StatefulWidget {
   /// Custom day cell builder for complete UI customization
   final FlickerDayBuilder? dayBuilder;
 
-  /// Whether to highlight today's date
-  final bool? highlightToday;
-
   // ========================================
   // Layout Configuration Properties
   // ========================================
@@ -133,7 +130,6 @@ class FlickerMonthView extends StatefulWidget {
     this.disabledDate,
     this.onValueChange,
     this.dayBuilder,
-    this.highlightToday,
   });
 
   @override
@@ -374,12 +370,12 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     }
 
     // Default date cell styling
+    final theme = context.flickerTheme;
+
     bool highlight =
-        widget.highlightToday == true &&
+        theme.highlightToday == true &&
         selected == false &&
         _controller.isToday(date);
-
-    final theme = context.flickerTheme;
     final decoration = theme.getDayDecoration(
       isSelected: selected,
       isDisabled: isDisabled,
