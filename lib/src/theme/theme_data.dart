@@ -163,58 +163,111 @@ class FlickThemeData {
     );
   }
 
-  /// Returns the appropriate text style for a date based on its state
-  ///
-  /// Priority order: selected > highlighted today > disabled > default
-  ///
-  /// Parameters:
-  /// - [selected]: Whether the date is currently selected
-  /// - [disabled]: Whether the date is interactive/clickable
-  /// - [highlight]: Whether this date represents today
-  ///
-  /// Returns the corresponding [TextStyle] for the date's current state.
-  TextStyle getDayTextStyle(bool? selected, bool? disabled, bool? highlight) {
-    if (selected == true) return daySelectedTextStyle;
-    if (highlight == true) return dayHighlightTextStyle;
-    if (disabled == true) return dayDisabledTextStyle;
+  /// Get appropriate text style for a day based on its state
+  TextStyle getDayTextStyle( {
+    required bool isSelected,
+    required bool isDisabled,
+    required bool isHighlighted,
+    required bool isInRange,
+    required bool isRangeStart,
+    required bool isRangeEnd,
+  }) {
+    final dayState = _DayState(
+      isSelected: isSelected,
+      isDisabled: isDisabled,
+      isHighlighted: isHighlighted,
+      isInRange: isInRange,
+      isRangeStart: isRangeStart,
+      isRangeEnd: isRangeEnd,
+    );
+    
+    return _getTextStyleForState(dayState);
+  }
+  
+  /// Get text style based on day state priority
+  TextStyle _getTextStyleForState(_DayState state) {
+    if (state.isDisabled) {
+      return dayDisabledTextStyle;
+    }
+    
+    if (_isSelectedState(state)) {
+      return daySelectedTextStyle;
+    }
+    
+    if (state.isHighlighted) {
+      return dayHighlightTextStyle;
+    }
+    
+    if (state.isInRange) {
+      return dayTextStyle;
+    }
+    
     return dayTextStyle;
   }
+  
+  /// Check if the day is in a selected state (selected, range start, or range end)
+  bool _isSelectedState(_DayState state) {
+    return state.isSelected || state.isRangeStart || state.isRangeEnd;
+  }
 
-  /// Returns the appropriate decoration for a date container based on its state
-  ///
-  /// Priority order: selected > highlighted today > disabled > default
-  ///
-  /// Parameters:
-  /// - [selected]: Whether the date is currently selected
-  /// - [disabled]: Whether the date is interactive/clickable
-  /// - [highlight]: Whether this date represents today
-  /// - [inRange]: Whether the date is within a selected range
-  /// - [isRangeStart]: Whether the date is the start of a range
-  /// - [isRangeEnd]: Whether the date is the end of a range
-  ///
-  /// Returns the corresponding [BoxDecoration] for the date's current state.
+  /// Get appropriate decoration for a day based on its state
   BoxDecoration? getDayDecoration({
-    bool? selected,
-    bool? disabled,
-    bool? highlight,
-    bool? inRange,
-    bool? isRangeStart,
-    bool? isRangeEnd,
+    required bool isSelected,
+    required bool isDisabled,
+    required bool isHighlighted,
+    required bool isInRange,
+    required bool isRangeStart,
+    required bool isRangeEnd,
   }) {
-    if (highlight == true) return dayHighlightDecoration;
-    if (disabled == true) return dayDisabledDecoration;
-    BorderRadius? borderRadius;
-    if (isRangeStart == true && selected == true) {
-      borderRadius = onlyLeftBorderRadius;
-    } else if (isRangeEnd == true && selected == true) {
-      borderRadius = onlyRightBorderRadius;
-    } else if (inRange == true) {
-      borderRadius = noBorderRadius;
+    final dayState = _DayState(
+      isSelected: isSelected,
+      isDisabled: isDisabled,
+      isHighlighted: isHighlighted,
+      isInRange: isInRange,
+      isRangeStart: isRangeStart,
+      isRangeEnd: isRangeEnd,
+    );
+    
+    return _getDecorationForState(dayState);
+  }
+  
+  /// Get decoration based on day state priority
+  BoxDecoration? _getDecorationForState(_DayState state) {
+    if (state.isDisabled) {
+      return dayDisabledDecoration;
     }
-    if (borderRadius != null) {
-      return daySelectedDecoration!.copyWith(borderRadius: borderRadius);
+    
+    if (_isSelectedState(state)) {
+      return daySelectedDecoration;
     }
-    if (selected == true) return daySelectedDecoration;
+    
+    if (state.isHighlighted) {
+      return dayHighlightDecoration;
+    }
+    
+    if (state.isInRange) {
+      return dayDecoration;
+    }
+    
     return dayDecoration;
   }
+}
+
+/// Helper class to represent the state of a day
+class _DayState {
+  final bool isSelected;
+  final bool isDisabled;
+  final bool isHighlighted;
+  final bool isInRange;
+  final bool isRangeStart;
+  final bool isRangeEnd;
+  
+  const _DayState({
+    required this.isSelected,
+    required this.isDisabled,
+    required this.isHighlighted,
+    required this.isInRange,
+    required this.isRangeStart,
+    required this.isRangeEnd,
+  });
 }

@@ -254,44 +254,105 @@ class FlickerMonthController {
     return selection.last;
   }
 
-  void handleSingle(DateTime date) {
-    if (isContained(date)) {
-      selection = [];
-    } else {
-      selection = [date];
-    }
+  /// Handle single date selection mode
+  Selected handleSingle(DateTime date) {
+    if (_isDateDisabled(date)) return selection;
+    return [date];
   }
 
-  void handleMany(DateTime date) {
-    if (isContained(date)) {
-      selection.remove(date);
+  /// Handle multiple date selection mode
+  Selected handleMany(DateTime date) {
+    if (_isDateDisabled(date)) return selection;
+    
+    final newSelection = List<DateTime>.from(selection);
+    return _toggleDateInSelection(newSelection, date);
+  }
+  
+  /// Toggle a date in the selection list (add if not present, remove if present)
+  Selected _toggleDateInSelection(List<DateTime> currentSelection, DateTime date) {
+    final index = _findDateIndex(currentSelection, date);
+    
+    if (index != -1) {
+      currentSelection.removeAt(index);
     } else {
-      selection.add(date);
+      currentSelection.add(date);
     }
-    if (selection.length > 1) selection.sort((a, b) => a.compareTo(b));
+    
+    return currentSelection;
+  }
+  
+  /// Find the index of a date in a selection list
+  int _findDateIndex(List<DateTime> dateList, DateTime date) {
+    return dateList.indexWhere((d) => DateHelpers.isSameDay(d, date));
   }
 
-  void handleRange(DateTime date) {
-    if (selection.length >= 2) selection = [];
-    if (isContained(date)) {
-      selection.remove(date);
+  /// Handle range date selection mode
+  Selected handleRange(DateTime date) {
+    if (_isDateDisabled(date)) return selection;
+    
+    if (_isEmptySelection()) {
+      return [date];
+    } else if (_isSingleDateSelection()) {
+      return _handleSecondDateInRange(date);
     } else {
-      selection.add(date);
+      return [date]; // Reset range with new start date
     }
-    if (selection.length == 2) selection.sort((a, b) => a.compareTo(b));
+  }
+  
+  /// Check if a date is disabled
+  bool _isDateDisabled(DateTime date) {
+    return disabled!(date);
+  }
+  
+  /// Check if the selection is empty
+  bool _isEmptySelection() {
+    return selection.isEmpty;
+  }
+  
+  /// Check if the selection contains exactly one date
+  bool _isSingleDateSelection() {
+    return selection.length == 1;
+  }
+  
+  /// Handle the second date selection in range mode
+  Selected _handleSecondDateInRange(DateTime date) {
+    final startDate = selection.first;
+    
+    if (DateHelpers.isSameDay(startDate, date)) {
+      return [date]; // Same date selected twice, keep as single selection
+    }
+    
+    return _createValidDateRange(startDate, date);
+  }
+  
+  /// Create a valid date range based on two dates (ordered correctly)
+  Selected _createValidDateRange(DateTime firstDate, DateTime secondDate) {
+    if (secondDate.isBefore(firstDate)) {
+      return _validateDateRange(secondDate, firstDate);
+    } else {
+      return _validateDateRange(firstDate, secondDate);
+    }
   }
 
   void onWidgetUpdate(Selected value, FlickerSelectionMode? mode) {
     _updateMode(mode);
-    if (selection == value) return;
+    if (_isSelectionUnchanged(value)) return;
     
-    Selected next = List.from(value);
-    if (next.isEmpty) {
-      selection = next;
-      return;
-    }
+    final processedSelection = _processNewSelection(value);
+    update(processedSelection);
+  }
+  
+  /// Check if the selection has actually changed
+  bool _isSelectionUnchanged(Selected value) {
+    return selection == value;
+  }
+  
+  /// Process new selection value based on current mode and constraints
+  Selected _processNewSelection(Selected value) {
+    if (value.isEmpty) return value;
     
-    _processSelectionByMode(next);
+    final next = List<DateTime>.from(value);
+    return _processSelectionByMode(next);
   }
   
   /// Update selection mode if changed
@@ -302,45 +363,49 @@ class FlickerMonthController {
   }
   
   /// Process selection based on current mode
-  void _processSelectionByMode(Selected next) {
+  Selected _processSelectionByMode(Selected next) {
     switch (mode) {
       case FlickerSelectionMode.single:
-        _processSingleMode(next);
-        break;
+        return _processSingleMode(next);
       case FlickerSelectionMode.many:
-        _processManyMode(next);
-        break;
+        return _processManyMode(next);
       case FlickerSelectionMode.range:
-        _processRangeMode(next);
-        break;
+        return _processRangeMode(next);
     }
   }
   
   /// Process single selection mode
-  void _processSingleMode(Selected next) {
+  Selected _processSingleMode(Selected next) {
     _removeDisabledDates(next);
-    if (next.isNotEmpty) {
-      next = [next.last];
-    }
-    update(next);
+    return next.isNotEmpty ? [next.last] : next;
   }
   
   /// Process many selection mode
-  void _processManyMode(Selected next) {
+  Selected _processManyMode(Selected next) {
     _removeDisabledDates(next);
-    update(next);
+    return next;
   }
   
   /// Process range selection mode
-  void _processRangeMode(Selected next) {
-    next = next.take(_DateRangeConstants.maxRangeDates).toList();
-    if (disabled != null) {
-      _removeDisabledDates(next);
-      if (next.length == 2) {
-        next = _validateDateRange(next.first, next.last);
-      }
+  Selected _processRangeMode(Selected next) {
+    final limitedSelection = _limitRangeSelection(next);
+    return _validateRangeSelection(limitedSelection);
+  }
+  
+  /// Limit range selection to maximum allowed dates
+  Selected _limitRangeSelection(Selected dates) {
+    return dates.take(_DateRangeConstants.maxRangeDates).toList();
+  }
+  
+  /// Validate range selection against disabled dates
+  Selected _validateRangeSelection(Selected dates) {
+    if (disabled == null) return dates;
+    
+    _removeDisabledDates(dates);
+    if (dates.length == 2) {
+      return _validateDateRange(dates.first, dates.last);
     }
-    update(next);
+    return dates;
   }
   
   /// Remove disabled dates from selection
@@ -352,53 +417,81 @@ class FlickerMonthController {
   
   /// Validate date range and return valid selection
   Selected _validateDateRange(DateTime startDate, DateTime endDate) {
-    final daysDifference = endDate.difference(startDate).inDays;
+    final daysDifference = _calculateDaysDifference(startDate, endDate);
     
-    if (daysDifference <= _DateRangeConstants.smallRangeThreshold) {
+    if (_isSmallRange(daysDifference)) {
       return _validateSmallRange(startDate, endDate, daysDifference);
     } else {
       return _validateLargeRange(startDate, endDate, daysDifference);
     }
   }
   
+  /// Calculate the number of days between two dates
+  int _calculateDaysDifference(DateTime startDate, DateTime endDate) {
+    return endDate.difference(startDate).inDays;
+  }
+  
+  /// Check if the range is considered small for validation purposes
+  bool _isSmallRange(int daysDifference) {
+    return daysDifference <= _DateRangeConstants.smallRangeThreshold;
+  }
+  
   /// Validate small date range (≤7 days) by checking each day
   Selected _validateSmallRange(DateTime startDate, DateTime endDate, int daysDifference) {
+    if (_hasDisabledDatesInRange(startDate, daysDifference)) {
+      return [startDate]; // Keep only start date if disabled dates found
+    }
+    return [startDate, endDate]; // All dates valid
+  }
+  
+  /// Check if there are any disabled dates in a small range
+  bool _hasDisabledDatesInRange(DateTime startDate, int daysDifference) {
     for (int i = 1; i < daysDifference; i++) {
       final checkDate = startDate.add(Duration(days: i));
       if (disabled!(checkDate)) {
-        return [startDate]; // Keep only start date if disabled dates found
+        return true;
       }
     }
-    return [startDate, endDate]; // All dates valid
+    return false;
   }
   
   /// Validate large date range (>7 days) using sampling approach
   Selected _validateLargeRange(DateTime startDate, DateTime endDate, int daysDifference) {
     final sampleDates = _generateSampleDates(startDate, daysDifference);
     
-    for (final sampleDate in sampleDates) {
-      if (disabled!(sampleDate)) {
-        return [startDate]; // Keep only start date if disabled dates likely exist
-      }
+    if (_hasDisabledDatesInSamples(sampleDates)) {
+      return [startDate]; // Keep only start date if disabled dates likely exist
     }
     return [startDate, endDate]; // No disabled dates found in samples
+  }
+  
+  /// Check if any of the sample dates are disabled
+  bool _hasDisabledDatesInSamples(List<DateTime> sampleDates) {
+    return sampleDates.any((date) => disabled!(date));
   }
   
   /// Generate sample dates for large range validation
   List<DateTime> _generateSampleDates(DateTime startDate, int daysDifference) {
     final sample = <DateTime>[];
     
-    // Add weekly samples
+    _addWeeklySamples(sample, startDate, daysDifference);
+    _addAdditionalSamples(sample, startDate, daysDifference);
+    
+    return sample;
+  }
+  
+  /// Add weekly interval samples to the sample list
+  void _addWeeklySamples(List<DateTime> sample, DateTime startDate, int daysDifference) {
     for (int i = _DateRangeConstants.samplingInterval; i < daysDifference; i += _DateRangeConstants.samplingInterval) {
       sample.add(startDate.add(Duration(days: i)));
     }
-    
-    // Add additional samples for better coverage
+  }
+  
+  /// Add additional samples for better coverage in large ranges
+  void _addAdditionalSamples(List<DateTime> sample, DateTime startDate, int daysDifference) {
     if (daysDifference > _DateRangeConstants.additionalSamplingThreshold) {
       sample.add(startDate.add(Duration(days: daysDifference ~/ 3)));
       sample.add(startDate.add(Duration(days: (daysDifference * 2) ~/ 3)));
     }
-    
-    return sample;
   }
 }

@@ -381,18 +381,21 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
     final theme = context.flickerTheme;
     final decoration = theme.getDayDecoration(
-      selected: selected,
-      disabled: isDisabled,
-      highlight: highlight,
-      inRange: isInRange,
+      isSelected: selected,
+      isDisabled: isDisabled,
+      isHighlighted: highlight,
+      isInRange: isInRange,
       isRangeStart: isRangeStart,
       isRangeEnd: isRangeEnd,
     );
 
     TextStyle textStyle = theme.getDayTextStyle(
-      selected,
-      isDisabled,
-      highlight,
+      isSelected: selected,
+      isDisabled: isDisabled,
+      isHighlighted: highlight,
+      isInRange: isInRange,
+      isRangeStart: isRangeStart,
+      isRangeEnd: isRangeEnd,
     );
 
     final container = Container(
@@ -414,7 +417,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
   // Cache for built grid widgets to avoid rebuilding
   final Map<String, Widget> _gridWidgetCache = {};
-  
+
   /// Build swipe view content
   ///
   /// [context] Build context
@@ -424,13 +427,14 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   Widget _swipableBuilder(BuildContext context, DateTime current) {
     return PerformanceMonitor.timeOperation('swipableBuilder', () {
       // Create cache key for this specific grid configuration
-      final cacheKey = '${current.year}-${current.month}-${widget.firstDayOfWeek}-${widget.viewCount}-${widget.scrollDirection}';
-      
+      final cacheKey =
+          '${current.year}-${current.month}-${widget.firstDayOfWeek}-${widget.viewCount}-${widget.scrollDirection}';
+
       // Check if we have a cached widget for this configuration
       if (_gridWidgetCache.containsKey(cacheKey)) {
         return _gridWidgetCache[cacheKey]!;
       }
-      
+
       // Generate grid data (now cached in DateHelpers)
       final grids = DateHelpers.generateGrid(
         current,
@@ -438,61 +442,61 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
         widget.viewCount,
       );
 
-    // Pre-allocate children list for better performance
-    final allChildren = <Widget>[];
-    
-    // Build grid child components with optimized iteration
-    for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
-      final data = grids[gridIndex];
-      
-      // Pre-build all cells for this grid
-      final cells = List<Widget>.generate(data.length, (cellIndex) {
-        return _dayBuilder(context, data[cellIndex], cellIndex);
-      });
+      // Pre-allocate children list for better performance
+      final allChildren = <Widget>[];
 
-      final child = SizedBox(
-        width: gridViewWidth,
-        height: gridViewHeight,
-        child: GridView.count(
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: CalendarGridConstants.daysPerWeek,
-          childAspectRatio: CalendarGridConstants.cellAspectRatio,
-          children: cells,
-        ),
-      );
+      // Build grid child components with optimized iteration
+      for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
+        final data = grids[gridIndex];
 
-      // Add date title for vertical scrolling
-      if (widget.scrollDirection == Axis.vertical) {
-        if (gridIndex == 0) {
-          allChildren.add(FlickerViewTitle(date: _display));
-          allChildren.add(child);
-        } else if (gridIndex == grids.length - 1) {
-          final title = DateHelpers.nextMonth(_display);
-          allChildren.add(FlickerViewTitle(date: title));
-          allChildren.add(child);
+        // Pre-build all cells for this grid
+        final cells = List<Widget>.generate(data.length, (cellIndex) {
+          return _dayBuilder(context, data[cellIndex], cellIndex);
+        });
+
+        final child = SizedBox(
+          width: gridViewWidth,
+          height: gridViewHeight,
+          child: GridView.count(
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: CalendarGridConstants.daysPerWeek,
+            childAspectRatio: CalendarGridConstants.cellAspectRatio,
+            children: cells,
+          ),
+        );
+
+        // Add date title for vertical scrolling
+        if (widget.scrollDirection == Axis.vertical) {
+          if (gridIndex == 0) {
+            allChildren.add(FlickerViewTitle(date: _display));
+            allChildren.add(child);
+          } else if (gridIndex == grids.length - 1) {
+            final title = DateHelpers.nextMonth(_display);
+            allChildren.add(FlickerViewTitle(date: title));
+            allChildren.add(child);
+          } else {
+            allChildren.add(child);
+          }
         } else {
           allChildren.add(child);
         }
-      } else {
-        allChildren.add(child);
       }
-    }
 
-    final result = Flex(
-      direction: widget.scrollDirection,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: allChildren,
-    );
-    
-    // Cache the built widget (limit cache size to prevent memory issues)
-    if (_gridWidgetCache.length >= 10) {
-      final oldestKey = _gridWidgetCache.keys.first;
-      _gridWidgetCache.remove(oldestKey);
-    }
-    _gridWidgetCache[cacheKey] = result;
-    
-    return result;
+      final result = Flex(
+        direction: widget.scrollDirection,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: allChildren,
+      );
+
+      // Cache the built widget (limit cache size to prevent memory issues)
+      if (_gridWidgetCache.length >= 10) {
+        final oldestKey = _gridWidgetCache.keys.first;
+        _gridWidgetCache.remove(oldestKey);
+      }
+      _gridWidgetCache[cacheKey] = result;
+
+      return result;
     });
   }
 

@@ -87,13 +87,24 @@ class Year extends StatelessWidget {
           vertical: SpacingConstants.smallVerticalMargin,
         ),
         decoration: theme.getDayDecoration(
-          selected: selected,
-          disabled: disabled,
+          isSelected: selected,
+          isDisabled: disabled,
+          isHighlighted: false,
+          isInRange: false,
+          isRangeStart: false,
+          isRangeEnd: false,
         ),
         alignment: Alignment.center,
         child: Text(
           year.toString(),
-          style: theme.getDayTextStyle(selected, disabled, null),
+          style: theme.getDayTextStyle(
+            isSelected: selected,
+            isDisabled: disabled,
+            isHighlighted: false,
+            isInRange: false,
+            isRangeStart: false,
+            isRangeEnd: false,
+          ),
         ),
       ),
     );

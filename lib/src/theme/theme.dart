@@ -76,7 +76,14 @@ class FlickTheme {
     bool? enabled,
     bool? highlightToday,
   }) {
-    return data.getDayTextStyle(selected, enabled, highlightToday);
+    return data.getDayTextStyle(
+      isSelected: selected,
+      isDisabled: enabled ?? false,
+      isHighlighted: highlightToday ?? false,
+      isInRange: false,
+      isRangeStart: false,
+      isRangeEnd: false,
+    );
   }
 
   /// Get date container decoration
@@ -89,12 +96,12 @@ class FlickTheme {
     bool? isRangeEnd,
   }) {
     return data.getDayDecoration(
-      selected: selected,
-      disabled: enabled,
-      highlight: highlightToday,
-      inRange: inRange,
-      isRangeStart: isRangeStart,
-      isRangeEnd: isRangeEnd,
+      isSelected: selected ?? false,
+      isDisabled: enabled ?? false,
+      isHighlighted: highlightToday ?? false,
+      isInRange: inRange ?? false,
+      isRangeStart: isRangeStart ?? false,
+      isRangeEnd: isRangeEnd ?? false,
     );
   }
 
