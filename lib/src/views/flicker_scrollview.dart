@@ -84,7 +84,11 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
               builderDelegate: PagedChildBuilderDelegate<List<int>>(
                 itemBuilder: (context, row, index) =>
                     _buildGridRow(context, row, constraints),
-                firstPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
+                // Keep first page loading indicator to prevent white screen
+                firstPageProgressIndicatorBuilder: (_) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                // Disable other indicators to remove loading animations during scrolling
                 newPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
                 firstPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
                 newPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
