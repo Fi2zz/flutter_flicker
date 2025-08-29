@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_flicker/src/views/flicker_scrollview_data_manager.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
@@ -73,14 +73,20 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return PagedListView<int, List<int>>(
-          scrollController: _scrollController,
-          pagingController: _dataManager.pagingController,
-          padding: EdgeInsets.zero,
-          builderDelegate: PagedChildBuilderDelegate<List<int>>(
-            itemBuilder: (context, row, index) =>
-                _buildGridRow(context, row, constraints),
-          ),
+        return PagingListener(
+          controller: _dataManager.pagingController,
+          builder: (context, state, fetchNextPage) {
+            return PagedListView<int, List<int>>(
+              state: state,
+              fetchNextPage: fetchNextPage,
+              scrollController: _scrollController,
+              padding: EdgeInsets.zero,
+              builderDelegate: PagedChildBuilderDelegate<List<int>>(
+                itemBuilder: (context, row, index) =>
+                    _buildGridRow(context, row, constraints),
+              ),
+            );
+          },
         );
       },
     );
@@ -144,7 +150,7 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
   /// Checks if a specific page is already loaded
   Future<bool> _isPageLoaded(int page) async {
     final pagingController = _dataManager.pagingController;
-    final currentLength = pagingController.itemList?.length ?? 0;
+    final currentLength = pagingController.items?.length ?? 0;
     final requiredRowsForPage = (page + 1) * DataManager.rowsPerPage;
     return currentLength >= requiredRowsForPage;
   }
@@ -171,7 +177,7 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
       if (page == 0) {
         pagingController.refresh();
       } else {
-        pagingController.notifyPageRequestListeners(page);
+        pagingController.fetchNextPage();
       }
 
       await completer.future.timeout(
@@ -194,7 +200,7 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
   /// Synchronously checks if a page is loaded (helper method)
   bool _isPageLoadedSync(int page) {
     final pagingController = _dataManager.pagingController;
-    final currentLength = pagingController.itemList?.length ?? 0;
+    final currentLength = pagingController.items?.length ?? 0;
     final requiredRowsForPage = (page + 1) * DataManager.rowsPerPage;
     return currentLength >= requiredRowsForPage;
   }

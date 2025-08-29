@@ -55,8 +55,16 @@ class DataManager<T> {
 
   /// Initializes the paging controller
   void _initializePagingController() {
-    _pagingController = PagingController(firstPageKey: 0);
-    _pagingController.addPageRequestListener(_fetchPage);
+    _pagingController = PagingController<int, List<int>>(
+      getNextPageKey: (state) {
+        if (state.error != null) return null;
+        final currentPageKey = state.keys?.isNotEmpty == true ? state.keys!.last : -1;
+        final nextPageKey = currentPageKey + 1;
+        final startRowIndex = nextPageKey * rowsPerPage;
+        return startRowIndex >= totalDataRows ? null : nextPageKey;
+      },
+      fetchPage: _fetchPage,
+    );
   }
 
   /// Ensures data is generated and cached
@@ -139,28 +147,12 @@ class DataManager<T> {
   }
 
   /// Fetches page data for infinite scroll pagination
-  void _fetchPage(int pageKey) {
+  Future<List<List<int>>> _fetchPage(int pageKey) async {
     try {
       final pageRows = generatePageRows(pageKey);
-
-      // Check if we've reached the end of data
-      if (pageRows.isEmpty) {
-        _pagingController.appendLastPage([]);
-        return;
-      }
-
-      // Check if this is the last page
-      final startRowIndex = pageKey * rowsPerPage;
-      final isLastPage = (startRowIndex + pageRows.length) >= totalDataRows;
-
-      if (isLastPage) {
-        _pagingController.appendLastPage(pageRows);
-      } else {
-        final nextPageKey = pageKey + 1;
-        _pagingController.appendPage(pageRows, nextPageKey);
-      }
+      return pageRows;
     } catch (error) {
-      _pagingController.error = error;
+      rethrow;
     }
   }
 
