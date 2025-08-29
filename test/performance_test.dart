@@ -83,7 +83,7 @@ void main() {
 
       // Check cache statistics
       final stats = DateHelpers.getCacheStats();
-      expect(stats['legacyGridCacheSize'], greaterThan(0));
+      expect(stats['gridCacheSize'], greaterThan(0));
       expect(stats['calendarCacheSize'], greaterThan(0));
       expect(stats['maxCacheSize'], equals(50));
 
@@ -92,7 +92,7 @@ void main() {
       // Clear caches
       DateHelpers.clearCaches();
       final clearedStats = DateHelpers.getCacheStats();
-      expect(clearedStats['legacyGridCacheSize'], equals(0));
+      expect(clearedStats['gridCacheSize'], equals(0));
       expect(clearedStats['calendarCacheSize'], equals(0));
     });
 

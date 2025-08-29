@@ -1,11 +1,11 @@
 /// Date utility class providing comprehensive date calculation and validation functionality
 class DateHelpers {
   // Grid generation cache
-  static final Map<String, List<DateTime?>> _gridCache = {};
-  static final Map<String, List<List<DateTime?>>> _legacyGridCache = {};
-  
-  static const int _maxCacheSize = 50; // Limit cache size to prevent memory issues
-  
+  static final Map<String, List<List<DateTime?>>> _gridCache = {};
+
+  static const int _maxCacheSize =
+      50; // Limit cache size to prevent memory issues
+
   /// Gets today's date with time set to 00:00:00
   static DateTime getToday() {
     final now = DateTime.now();
@@ -73,29 +73,29 @@ class DateHelpers {
       firstDayOfWeek >= 0 && firstDayOfWeek <= 6,
       'firstDayOfWeek must be between 0 and 6',
     );
-    
+
     // Create cache key
     final cacheKey = '${date.year}-${date.month}-$firstDayOfWeek-$viewCount';
-    
+
     // Check cache first
-    if (_legacyGridCache.containsKey(cacheKey)) {
-      return _legacyGridCache[cacheKey]!;
+    if (_gridCache.containsKey(cacheKey)) {
+      return _gridCache[cacheKey]!;
     }
-    
+
     // Generate grid data
-    final result = _generateLegacyGrid(date, firstDayOfWeek, viewCount);
-    
+    final result = _generateGrid(date, firstDayOfWeek, viewCount);
+
     // Cache management - remove oldest entries if cache is full
-    _manageLegacyGridCache();
-    
+    _manageGridCache();
+
     // Store in cache
-    _legacyGridCache[cacheKey] = result;
-    
+    _gridCache[cacheKey] = result;
+
     return result;
   }
-  
-  /// Generate legacy grid format for backward compatibility
-  static List<List<DateTime?>> _generateLegacyGrid(
+
+  /// Generate grid format
+  static List<List<DateTime?>> _generateGrid(
     DateTime date,
     int firstDayOfWeek,
     int viewCount,
@@ -116,46 +116,44 @@ class DateHelpers {
       return [...left, ...dates, ...right];
     });
   }
-  
-  /// Manage legacy grid cache size
-  static void _manageLegacyGridCache() {
-    if (_legacyGridCache.length >= _maxCacheSize) {
-      final oldestKey = _legacyGridCache.keys.first;
-      _legacyGridCache.remove(oldestKey);
+
+  /// Manage grid cache size
+  static void _manageGridCache() {
+    if (_gridCache.length >= _maxCacheSize) {
+      final oldestKey = _gridCache.keys.first;
+      _gridCache.remove(oldestKey);
     }
   }
-  
-
 
   // Calendar generation cache
   static final Map<String, List<DateTime>> _calendarCache = {};
-  
+
   /// Generate calendar data with date range
   static List<DateTime> generateCalendar(DateTime start, DateTime end) {
     // Create cache key
     final cacheKey = '${start.year}-${start.month}-${end.year}-${end.month}';
-    
+
     // Check cache first
     if (_calendarCache.containsKey(cacheKey)) {
       return _calendarCache[cacheKey]!;
     }
-    
+
     // Generate calendar data
     final months = _buildRangeCalendar(start, end);
-    
+
     // Cache management - remove oldest entries if cache is full
     _manageCalendarCache();
-    
+
     // Store in cache
     _calendarCache[cacheKey] = months;
-    
+
     return months;
   }
-  
+
   /// Build calendar months for a date range
   static List<DateTime> _buildRangeCalendar(DateTime start, DateTime end) {
     final months = <DateTime>[];
-    
+
     for (var year = start.year; year <= end.year; year++) {
       final monthStart = year == start.year ? start.month : 1;
       final monthEnd = year == end.year ? end.month : 12;
@@ -163,10 +161,10 @@ class DateHelpers {
         months.add(DateTime(year, month));
       }
     }
-    
+
     return months;
   }
-  
+
   /// Manage calendar cache size
   static void _manageCalendarCache() {
     if (_calendarCache.length >= _maxCacheSize) {
@@ -174,8 +172,6 @@ class DateHelpers {
       _calendarCache.remove(oldestKey);
     }
   }
-  
-
 
   /// Calculates a date 100 years ago from the given date
   ///
@@ -194,30 +190,27 @@ class DateHelpers {
     final today = maybeToday(date);
     return DateTime(today.year + 100, today.month, today.day);
   }
-  
+
   /// Get cache statistics
   static Map<String, int> getCacheStats() {
     return {
       'gridCacheSize': _gridCache.length,
-      'legacyGridCacheSize': _legacyGridCache.length,
       'calendarCacheSize': _calendarCache.length,
       'maxCacheSize': _maxCacheSize,
     };
   }
-  
+
   /// Clear all caches
   static void clearCaches() {
     _gridCache.clear();
-    _legacyGridCache.clear();
     _calendarCache.clear();
   }
-  
+
   /// Clear specific cache type
   static void clearGridCache() {
     _gridCache.clear();
-    _legacyGridCache.clear();
   }
-  
+
   /// Clear calendar cache
   static void clearCalendarCache() {
     _calendarCache.clear();
