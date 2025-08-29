@@ -133,7 +133,7 @@ class DateHelpers {
     }
     
     // Calculate total months for more efficient allocation
-    final totalMonths = (end.year - start.year) * 12 + (end.month - start.month) + 1;
+    // final totalMonths = (end.year - start.year) * 12 + (end.month - start.month) + 1;
     final months = <DateTime>[];
     
     for (var year = start.year; year <= end.year; year++) {

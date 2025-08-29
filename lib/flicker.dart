@@ -21,7 +21,7 @@ export 'src/views/flicker.dart' show Flicker, FlickerSelectionMode;
 export 'src/views/flicker_month_view.dart' show FlickerDayBuilder;
 
 /// Theme system for customizing the appearance
-export 'src/theme/theme.dart';
+export 'src/theme/theme.dart' show FlickThemeData, FlickTheme;
 
 /// Extension methods for BuildContext
 export 'src/views/flicker_extensions.dart' show FirstDayOfWeek;
