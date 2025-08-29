@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/views/flicker_scrollview_data_manager.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
@@ -56,11 +56,10 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
       endValue: widget.endValue,
       estimatedItemHeight: widget.itemHeight,
     );
-
     // Scroll to initial value
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToValue(widget.initialValue);
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToValue(widget.initialValue),
+    );
   }
 
   @override
@@ -72,7 +71,7 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (context, constraints) {
+      builder: (context, c) {
         return PagingListener(
           controller: _dataManager.pagingController,
           builder: (context, state, fetchNextPage) {
@@ -82,21 +81,24 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
               scrollController: _scrollController,
               padding: EdgeInsets.zero,
               builderDelegate: PagedChildBuilderDelegate<List<int>>(
-                itemBuilder: (context, row, index) =>
-                    _buildGridRow(context, row, constraints),
                 // Disable all indicators since we preload data to avoid loading states
-                firstPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
-                newPageProgressIndicatorBuilder: (_) => const SizedBox.shrink(),
-                firstPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
-                newPageErrorIndicatorBuilder: (_) => const SizedBox.shrink(),
-                noItemsFoundIndicatorBuilder: (_) => const SizedBox.shrink(),
-                noMoreItemsIndicatorBuilder: (_) => const SizedBox.shrink(),
+                firstPageProgressIndicatorBuilder: _shrink,
+                newPageProgressIndicatorBuilder: _shrink,
+                firstPageErrorIndicatorBuilder: _shrink,
+                newPageErrorIndicatorBuilder: _shrink,
+                noItemsFoundIndicatorBuilder: _shrink,
+                noMoreItemsIndicatorBuilder: _shrink,
+                itemBuilder: (ctx, row, index) => _builder(ctx, row, c),
               ),
             );
           },
         );
       },
     );
+  }
+
+  Widget _shrink(_) {
+    return const SizedBox.shrink();
   }
 
   /// Scrolls to the initial target value (only works with int type)
@@ -213,7 +215,7 @@ class _FlickerScrollViewState extends State<FlickerScrollView> {
   }
 
   /// Builds a grid row containing multiple items
-  Widget _buildGridRow(
+  Widget _builder(
     BuildContext context,
     List<int> row,
     BoxConstraints constraints,
