@@ -102,4 +102,22 @@ class DateHelpers {
     return months;
     // return generateMonths(from, to);
   }
+
+  /// Calculates a date 100 years ago from the given date
+  ///
+  /// [date] - Starting date (uses today if null)
+  /// Returns the date 100 years in the past
+  static DateTime maybe100yearsAgo(DateTime? date) {
+    final today = maybeToday(date);
+    return DateTime(today.year - 100, today.month, today.day);
+  }
+
+  /// Calculates a date 100 years from now from the given date
+  ///
+  /// [date] - Starting date (uses today if null)
+  /// Returns the date 100 years in the future
+  static DateTime maybe100yearsAfter(DateTime? date) {
+    final today = maybeToday(date);
+    return DateTime(today.year + 100, today.month, today.day);
+  }
 }

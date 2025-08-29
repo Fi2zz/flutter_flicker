@@ -1,10 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
+import './flicker_years_demo.dart';
 
 /// Demo picker mode enumeration
 ///
 /// Defines the different demo modes available in the showcase
 enum PickerMode { single, many, range, basic }
+
+/// Demo view mode enumeration
+///
+/// Defines the different demo views available
+enum DemoViewMode { picker, years }
 
 /// Comprehensive demo widget for Flicker date picker
 ///
@@ -40,6 +46,9 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
 
   /// Current picker mode for demo
   PickerMode _flickerMode = PickerMode.basic;
+
+  /// Current demo view mode
+  DemoViewMode _demoViewMode = DemoViewMode.picker;
 
   /// Number of months to display
   int _viewCount = 1;
@@ -81,37 +90,44 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> children = [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Welcome to Flicker',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          _buildDemoViewSwitch(),
+          const SizedBox(height: 20),
+          _buildThemeSwitch(),
+          const SizedBox(height: 20),
+          _buildDirectionSwitch(),
+          const SizedBox(height: 20),
+          _buildViewCountSwitch(),
+          const SizedBox(height: 20),
+          _buildModeSwitch(),
+          const SizedBox(height: 20),
+          _buildFirstDayOfWeekSwitch(),
+          const SizedBox(height: 20),
+          _buildSelectedInfo(),
+        ],
+      ),
+    ];
+
+    if (_demoViewMode == DemoViewMode.picker) {
+      children.add(_buildDatePicker());
+    } else {
+      children.add(FlickerYearsDemo());
+    }
+
     return CupertinoPageScaffold(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                const Text(
-                  'Welcome to Flicker',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                _buildThemeSwitch(),
-                const SizedBox(height: 20),
-                _buildDirectionSwitch(),
-                const SizedBox(height: 20),
-                _buildViewCountSwitch(),
-                const SizedBox(height: 20),
-                _buildModeSwitch(),
-                const SizedBox(height: 20),
-                _buildFirstDayOfWeekSwitch(),
-                const SizedBox(height: 20),
-                _buildSelectedInfo(),
-              ],
-            ),
-            // const SizedBox(height: 20),
-            _buildDatePicker(),
-          ],
+          children: children,
         ),
       ),
     );
@@ -135,6 +151,32 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         ...children,
       ],
     );
+  }
+
+  /// Demo view switch control
+  ///
+  /// Allows switching between picker demo and years demo
+  Widget _buildDemoViewSwitch() {
+    return _buildRow('Demo View', [
+      CupertinoSegmentedControl<DemoViewMode>(
+        groupValue: _demoViewMode,
+        children: {
+          DemoViewMode.picker: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: const Text('Picker'),
+          ),
+          DemoViewMode.years: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: const Text('Years'),
+          ),
+        },
+        onValueChanged: (DemoViewMode value) {
+          setState(() {
+            _demoViewMode = value;
+          });
+        },
+      ),
+    ]);
   }
 
   /// Theme switch control

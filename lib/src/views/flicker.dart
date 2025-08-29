@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/theme/theme.dart';
+import 'package:flutter_flicker/src/views/flicker_date_title.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'package:flutter_flicker/src/views/flicker_month_view.dart';
 import 'package:flutter_flicker/src/views/flicker_month_model.dart';
@@ -124,16 +125,13 @@ class _FlickerState extends State<Flicker> {
   late DateTime _display = DateHelpers.maybeToday(null);
   final GlobalKey<FlickerMonthViewState> _monthViewKey = GlobalKey();
 
-  int? get _startYear {
-    int? startYear = widget.startDate?.year;
-    if (_endYear != null && startYear != null && _endYear! - startYear == 1) {
-      return startYear - 1;
-    }
-    return startYear;
+  int get _startYear {
+    int start = DateHelpers.maybe100yearsAgo(widget.startDate).year;
+    return (_endYear - start == 1) ? start - 1 : start;
   }
 
-  int? get _endYear {
-    return widget.endDate?.year;
+  int get _endYear {
+    return DateHelpers.maybe100yearsAfter(widget.endDate).year;
   }
 
   void _onSelectYear(int year) => setState(() {
@@ -185,14 +183,27 @@ class _FlickerState extends State<Flicker> {
 
   Widget _buildYearsView() {
     if (_viewType != _FlickerViewType.year) return SizedBox.shrink();
-    return FlickerYearsView(
+
+    Widget yearView = FlickerYearsView(
       date: _display,
-      onSelect: _onSelectYear,
+      onTapYear: _onSelectYear,
       onTapTitle: _showMonthView,
       startYear: _startYear,
       endYear: _endYear,
       size: _yearSize,
+      itemHeight: gridBasicSize,
     );
+    Widget title = SizedBox(
+      width: _yearSize.width,
+      height: gridBasicSize,
+      child: FlickerDateTitle(
+        date: _display,
+        onTap: _showMonthView,
+        roate: true,
+        showTriangle: true,
+      ),
+    );
+    return Column(children: [title, yearView]);
   }
 
   Widget _buildStack() {
