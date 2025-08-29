@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 import 'flicker_extensions.dart';
 
 /// Week day header widget
@@ -22,7 +23,7 @@ class FlickerWeekView extends StatelessWidget {
 
     Widget child = GridView.count(
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 7,
+      crossAxisCount: CalendarGridConstants.daysPerWeek,
       childAspectRatio: 1,
       crossAxisSpacing: 0,
       mainAxisSpacing: 0,

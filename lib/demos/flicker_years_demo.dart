@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import '../src/views/flicker_years_view.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 /// Demo widget for FlickerYearsView component
 ///
@@ -45,7 +46,7 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
   @override
   Widget build(BuildContext context) {
     final child = Padding(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(SpacingConstants.defaultPadding),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8.0,
@@ -93,7 +94,7 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
 }
 
 TextStyle style = TextStyle(
-  fontSize: 16,
+  fontSize: TypographyConstants.standardFontSize,
   fontWeight: FontWeight.normal,
   color: CupertinoColors.black,
 );

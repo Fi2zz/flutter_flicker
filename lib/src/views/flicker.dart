@@ -10,6 +10,7 @@ import 'flicker_extensions.dart';
 export 'flicker_month_controller.dart' show FlickerSelectionMode;
 export './flicker_month_view.dart' show FlickerDayBuilder;
 import 'date_helpers.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 /// View type enumeration
 ///
@@ -230,7 +231,10 @@ class _FlickerState extends State<Flicker> {
   Widget _builder(BuildContext context) {
     return Container(
       decoration: context.flickerTheme.decoration,
-      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+      padding: EdgeInsets.symmetric(
+        vertical: SpacingConstants.calendarVerticalPadding,
+        horizontal: SpacingConstants.calendarHorizontalPadding,
+      ),
       child: SizedBox(width: _size.width, child: _buildStack()),
     );
   }

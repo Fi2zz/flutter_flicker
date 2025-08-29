@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 import 'flicker_extensions.dart';
 
 const double gridBasicSize = 40.0;
@@ -270,17 +271,15 @@ class _ChevronPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2.0
+      ..strokeWidth = IconDrawingConstants.strokeWidth
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
     final path = Path();
     final center = Offset(size.width / 2, size.height / 2);
-    final width = size.width * 0.15; // Arrow width is 15% of container
-    final height =
-        size.height *
-        0.35; // Arrow height is 35% of container, flattened (height > width)
+    final width = size.width * IconDrawingConstants.arrowWidthRatio;
+    final height = size.height * IconDrawingConstants.arrowHeightRatio;
     if (direction == 'left') {
       // Draw left arrow: >
       path.moveTo(center.dx + width / 2, center.dy - height / 2);
@@ -389,8 +388,8 @@ class _TrianglePainter extends CustomPainter {
     // Flattened triangle, pointing down by default
     final centerX = size.width / 2;
     final centerY = size.height / 2;
-    final height = size.height * 0.4; // Flatter height
-    final width = size.width * 0.8; // Wider base
+    final height = size.height * IconDrawingConstants.triangleHeightRatio;
+    final width = size.width * IconDrawingConstants.triangleWidthRatio;
     path.moveTo(centerX, centerY + height / 2); // Bottom vertex
     path.lineTo(centerX - width / 2, centerY - height / 2); // Top left vertex
     path.lineTo(centerX + width / 2, centerY - height / 2); // Top right vertex

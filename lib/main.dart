@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
 import 'demos/flicker_demo.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +27,7 @@ class DemoNavigator extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       child: Container(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(SpacingConstants.defaultPadding),
         child: FlickerPickerDemo(),
       ),
     );

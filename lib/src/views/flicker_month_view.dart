@@ -5,6 +5,8 @@ import 'package:flutter_flicker/src/views/flicker_swipable_view.dart';
 import 'package:flutter_flicker/src/views/flicker_week_view.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import 'package:flutter_flicker/src/views/date_helpers.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import 'package:flutter_flicker/src/utils/performance_monitor.dart';
 import 'flicker_extensions.dart';
 
 // ============================================================================
@@ -410,6 +412,9 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   // Swipe View Building Methods
   // ========================================
 
+  // Cache for built grid widgets to avoid rebuilding
+  final Map<String, Widget> _gridWidgetCache = {};
+  
   /// Build swipe view content
   ///
   /// [context] Build context
@@ -417,50 +422,78 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   ///
   /// Returns built swipe view content
   Widget _swipableBuilder(BuildContext context, DateTime current) {
-    // Generate grid data
-    List<List<DateTime?>> grids = DateHelpers.generateGrid(
-      current,
-      context.getFirstDayOfWeek(widget.firstDayOfWeek),
-      widget.viewCount,
-    );
-
-    // Build grid child components
-    final children = grids.map((data) {
-      int index = grids.indexOf(data);
-      final cells = data.map(
-        (date) => _dayBuilder(context, date, data.indexOf(date)),
+    return PerformanceMonitor.timeOperation('swipableBuilder', () {
+      // Create cache key for this specific grid configuration
+      final cacheKey = '${current.year}-${current.month}-${widget.firstDayOfWeek}-${widget.viewCount}-${widget.scrollDirection}';
+      
+      // Check if we have a cached widget for this configuration
+      if (_gridWidgetCache.containsKey(cacheKey)) {
+        return _gridWidgetCache[cacheKey]!;
+      }
+      
+      // Generate grid data (now cached in DateHelpers)
+      final grids = DateHelpers.generateGrid(
+        current,
+        context.getFirstDayOfWeek(widget.firstDayOfWeek),
+        widget.viewCount,
       );
 
-      Widget child = SizedBox(
+    // Pre-allocate children list for better performance
+    final allChildren = <Widget>[];
+    
+    // Build grid child components with optimized iteration
+    for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
+      final data = grids[gridIndex];
+      
+      // Pre-build all cells for this grid
+      final cells = List<Widget>.generate(data.length, (cellIndex) {
+        return _dayBuilder(context, data[cellIndex], cellIndex);
+      });
+
+      final child = SizedBox(
         width: gridViewWidth,
         height: gridViewHeight,
         child: GridView.count(
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 7, // 7 days a week
-          childAspectRatio: 1, // Square cells
-          children: List.from(cells),
+          crossAxisCount: CalendarGridConstants.daysPerWeek,
+          childAspectRatio: CalendarGridConstants.cellAspectRatio,
+          children: cells,
         ),
       );
 
       // Add date title for vertical scrolling
       if (widget.scrollDirection == Axis.vertical) {
-        if (index == 0) return [FlickerViewTitle(date: _display), child];
-        if (index == grids.length - 1) {
+        if (gridIndex == 0) {
+          allChildren.add(FlickerViewTitle(date: _display));
+          allChildren.add(child);
+        } else if (gridIndex == grids.length - 1) {
           final title = DateHelpers.nextMonth(_display);
-          return [FlickerViewTitle(date: title), child];
+          allChildren.add(FlickerViewTitle(date: title));
+          allChildren.add(child);
+        } else {
+          allChildren.add(child);
         }
+      } else {
+        allChildren.add(child);
       }
-      return [child];
-    });
+    }
 
-    debugPrint('widget.scrollDirection: ${widget.scrollDirection}');
-
-    return Flex(
+    final result = Flex(
       direction: widget.scrollDirection,
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: List.from(children.expand((x) => x)),
+      children: allChildren,
     );
+    
+    // Cache the built widget (limit cache size to prevent memory issues)
+    if (_gridWidgetCache.length >= 10) {
+      final oldestKey = _gridWidgetCache.keys.first;
+      _gridWidgetCache.remove(oldestKey);
+    }
+    _gridWidgetCache[cacheKey] = result;
+    
+    return result;
+    });
   }
 
   // ========================================
@@ -592,6 +625,13 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     return widget.viewCount == 1
         ? _buildSingleView(left, right)
         : _buildDoubleView(left, right);
+  }
+
+  @override
+  void dispose() {
+    // Clear widget cache to prevent memory leaks
+    _gridWidgetCache.clear();
+    super.dispose();
   }
 
   @override

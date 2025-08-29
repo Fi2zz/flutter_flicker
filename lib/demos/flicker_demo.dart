@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
 import './flicker_years_demo.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import './demo_constants.dart';
 
 /// Demo picker mode enumeration
 ///
@@ -96,21 +98,24 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         children: [
           const Text(
             'Welcome to Flicker',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: TypographyConstants.largeTitleFontSize,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildDemoViewSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildThemeSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildDirectionSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildViewCountSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildModeSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildFirstDayOfWeekSwitch(),
-          const SizedBox(height: 20),
+          SizedBox(height: SpacingConstants.verticalSpacing),
           _buildSelectedInfo(),
         ],
       ),
@@ -124,7 +129,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
 
     return CupertinoPageScaffold(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(SpacingConstants.defaultPadding),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: children,
@@ -140,16 +145,29 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   Widget _buildRow(String title, List<Widget> children) {
     final titleWidget = Text(
       title,
-      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      style: TextStyle(
+        fontSize: TypographyConstants.standardFontSize,
+        fontWeight: FontWeight.bold,
+      ),
     );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SizedBox(width: 150, child: titleWidget),
+        SizedBox(width: DemoSpacingConstants.labelWidth, child: titleWidget),
         ...children,
       ],
+    );
+  }
+
+  /// Helper method to create segmented control option with consistent padding
+  Widget _buildSegmentedOption(String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: DemoSpacingConstants.segmentedControlHorizontalPadding,
+      ),
+      child: Text(text),
     );
   }
 
@@ -161,14 +179,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       CupertinoSegmentedControl<DemoViewMode>(
         groupValue: _demoViewMode,
         children: {
-          DemoViewMode.picker: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Picker'),
-          ),
-          DemoViewMode.years: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Years'),
-          ),
+          DemoViewMode.picker: _buildSegmentedOption('Picker'),
+          DemoViewMode.years: _buildSegmentedOption('Years'),
         },
         onValueChanged: (DemoViewMode value) {
           setState(() {
@@ -187,14 +199,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       CupertinoSegmentedControl<int>(
         groupValue: _useDarkMode ? 1 : 0,
         children: {
-          0: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Light'),
-          ),
-          1: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Dark'),
-          ),
+          0: _buildSegmentedOption('Light'),
+          1: _buildSegmentedOption('Dark'),
         },
         onValueChanged: (int value) {
           setState(() {
@@ -213,14 +219,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       CupertinoSegmentedControl<int>(
         groupValue: _viewCount,
         children: {
-          1: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Single View'),
-          ),
-          2: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Double Views'),
-          ),
+          1: _buildSegmentedOption('Single View'),
+          2: _buildSegmentedOption('Double Views'),
         },
         onValueChanged: (int value) {
           setState(() {
@@ -239,22 +239,10 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       CupertinoSegmentedControl<FirstDayOfWeek>(
         groupValue: _firstDayOfWeek,
         children: {
-          FirstDayOfWeek.monday: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Monday'),
-          ),
-          FirstDayOfWeek.sunday: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Sunday'),
-          ),
-          FirstDayOfWeek.saturday: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Saturday'),
-          ),
-          FirstDayOfWeek.locale: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Text('Locale Based'),
-          ),
+          FirstDayOfWeek.monday: _buildSegmentedOption('Monday'),
+          FirstDayOfWeek.sunday: _buildSegmentedOption('Sunday'),
+          FirstDayOfWeek.saturday: _buildSegmentedOption('Saturday'),
+          FirstDayOfWeek.locale: _buildSegmentedOption('Locale Based'),
         },
         onValueChanged: (FirstDayOfWeek value) {
           setState(() {
@@ -272,22 +260,10 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     final child = CupertinoSegmentedControl<PickerMode>(
       groupValue: _flickerMode,
       children: {
-        PickerMode.basic: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Basic'),
-        ),
-        PickerMode.single: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Single'),
-        ),
-        PickerMode.range: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Range'),
-        ),
-        PickerMode.many: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Many'),
-        ),
+        PickerMode.basic: _buildSegmentedOption('Basic'),
+        PickerMode.single: _buildSegmentedOption('Single'),
+        PickerMode.range: _buildSegmentedOption('Range'),
+        PickerMode.many: _buildSegmentedOption('Many'),
       },
       onValueChanged: (value) {
         setState(() {
@@ -317,14 +293,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     final child = CupertinoSegmentedControl<Axis>(
       groupValue: _axis,
       children: {
-        Axis.horizontal: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Horizontal'),
-        ),
-        Axis.vertical: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: const Text('Vertical'),
-        ),
+        Axis.horizontal: _buildSegmentedOption('Horizontal'),
+        Axis.vertical: _buildSegmentedOption('Vertical'),
       },
       onValueChanged: (value) {
         setState(() {

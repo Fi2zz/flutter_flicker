@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'flicker_extensions.dart';
 import 'flicker_shared.dart';
 import 'flicker_scrollview.dart';
+import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 /// Year selection view component
 ///
@@ -82,7 +83,9 @@ class Year extends StatelessWidget {
       tappable: !disabled,
       onTap: () => onTap(year),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
+        margin: EdgeInsets.symmetric(
+          vertical: SpacingConstants.smallVerticalMargin,
+        ),
         decoration: theme.getDayDecoration(
           selected: selected,
           disabled: disabled,

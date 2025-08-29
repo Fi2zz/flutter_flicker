@@ -1,5 +1,9 @@
 /// Date utility class providing comprehensive date calculation and validation functionality
 class DateHelpers {
+  // Grid generation cache
+  static final Map<String, List<List<DateTime?>>> _gridCache = {};
+  static const int _maxCacheSize = 50; // Limit cache size to prevent memory issues
+  
   /// Gets today's date with time set to 00:00:00
   static DateTime getToday() {
     final now = DateTime.now();
@@ -74,7 +78,17 @@ class DateHelpers {
       firstDayOfWeek >= 0 && firstDayOfWeek <= 6,
       'firstDayOfWeek must be between 0 and 6',
     );
-    return List.generate(viewCount, (index) {
+    
+    // Create cache key
+    final cacheKey = '${date.year}-${date.month}-$firstDayOfWeek-$viewCount';
+    
+    // Check cache first
+    if (_gridCache.containsKey(cacheKey)) {
+      return _gridCache[cacheKey]!;
+    }
+    
+    // Generate grid data
+    final result = List.generate(viewCount, (index) {
       int year = date.year;
       int month = date.month + index;
       final first = DateTime(year, month, 1);
@@ -89,13 +103,39 @@ class DateHelpers {
       final right = List.generate(daysAfter, (_) => null);
       return [...left, ...dates, ...right];
     });
+    
+    // Cache management - remove oldest entries if cache is full
+    if (_gridCache.length >= _maxCacheSize) {
+      final oldestKey = _gridCache.keys.first;
+      _gridCache.remove(oldestKey);
+    }
+    
+    // Store in cache
+    _gridCache[cacheKey] = result;
+    
+    return result;
   }
 
+  // Calendar generation cache
+  static final Map<String, List<DateTime>> _calendarCache = {};
+  
   /// Generates calendar data
   ///
   /// Generates all months within the date range from [start] to [end]
+  /// Uses caching to avoid regenerating identical date ranges
   static List<DateTime> generateCalendar(DateTime start, DateTime end) {
+    // Create cache key
+    final cacheKey = '${start.year}-${start.month}-${end.year}-${end.month}';
+    
+    // Check cache first
+    if (_calendarCache.containsKey(cacheKey)) {
+      return _calendarCache[cacheKey]!;
+    }
+    
+    // Calculate total months for more efficient allocation
+    final totalMonths = (end.year - start.year) * 12 + (end.month - start.month) + 1;
     final months = <DateTime>[];
+    
     for (var year = start.year; year <= end.year; year++) {
       final monthStart = year == start.year ? start.month : 1;
       final monthEnd = year == end.year ? end.month : 12;
@@ -103,8 +143,17 @@ class DateHelpers {
         months.add(DateTime(year, month));
       }
     }
+    
+    // Cache management - remove oldest entries if cache is full
+    if (_calendarCache.length >= _maxCacheSize) {
+      final oldestKey = _calendarCache.keys.first;
+      _calendarCache.remove(oldestKey);
+    }
+    
+    // Store in cache
+    _calendarCache[cacheKey] = months;
+    
     return months;
-    // return generateMonths(from, to);
   }
 
   /// Calculates a date 100 years ago from the given date
@@ -123,5 +172,25 @@ class DateHelpers {
   static DateTime maybe100yearsAfter(DateTime? date) {
     final today = maybeToday(date);
     return DateTime(today.year + 100, today.month, today.day);
+  }
+  
+  /// Clears all caches to free memory
+  ///
+  /// Should be called when the application needs to free memory
+  /// or when cache data is no longer needed
+  static void clearCaches() {
+    _gridCache.clear();
+    _calendarCache.clear();
+  }
+  
+  /// Gets cache statistics for debugging
+  ///
+  /// Returns a map with cache sizes and hit rates
+  static Map<String, int> getCacheStats() {
+    return {
+      'gridCacheSize': _gridCache.length,
+      'calendarCacheSize': _calendarCache.length,
+      'maxCacheSize': _maxCacheSize,
+    };
   }
 }

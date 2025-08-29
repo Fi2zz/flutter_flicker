@@ -2,6 +2,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_flicker/src/views/date_helpers.dart';
 
 typedef Selected = List<DateTime>;
+typedef Disabled = bool Function(DateTime date);
+typedef Sync = void Function(Selected selected);
+typedef Rebuild = void Function();
+
+/// Constants for date range validation
+class _DateRangeConstants {
+  /// Maximum days for detailed range checking
+  static const int smallRangeThreshold = 7;
+  /// Sampling interval for large ranges (days)
+  static const int samplingInterval = 7;
+  /// Minimum days for additional sampling
+  static const int additionalSamplingThreshold = 14;
+  /// Maximum dates allowed in range mode
+  static const int maxRangeDates = 2;
+}
 
 enum FlickerSelectionMode {
   /// Single date selection - user can select only one date
@@ -267,89 +282,123 @@ class FlickerMonthController {
   }
 
   void onWidgetUpdate(Selected value, FlickerSelectionMode? mode) {
-    if (this.mode != mode) this.mode = mode ?? FlickerSelectionMode.single;
+    _updateMode(mode);
     if (selection == value) return;
-    // Selected next = selection;
+    
     Selected next = List.from(value);
     if (next.isEmpty) {
       selection = next;
       return;
     }
-    switch (this.mode) {
+    
+    _processSelectionByMode(next);
+  }
+  
+  /// Update selection mode if changed
+  void _updateMode(FlickerSelectionMode? mode) {
+    if (this.mode != mode) {
+      this.mode = mode ?? FlickerSelectionMode.single;
+    }
+  }
+  
+  /// Process selection based on current mode
+  void _processSelectionByMode(Selected next) {
+    switch (mode) {
       case FlickerSelectionMode.single:
-        if (disabled != null) {
-          next.removeWhere((element) => disabled!(element));
-        }
-        if (next.isNotEmpty) {
-          next = [next.last];
-        }
-        update(next);
+        _processSingleMode(next);
         break;
       case FlickerSelectionMode.many:
-        if (disabled != null) {
-          next.removeWhere((element) => disabled!(element));
-        }
-        update(next);
+        _processManyMode(next);
         break;
-
       case FlickerSelectionMode.range:
-        next = next.take(2).toList();
-        if (disabled != null) {
-          // Limit to maximum 2 dates for range mode
-          next = next..removeWhere((date) => disabled!(date));
-          // If we have exactly 2 dates, validate the range
-          if (next.length == 2) {
-            final startDate = next.first;
-            final endDate = next.last;
-            // For small ranges (≤7 days), check each day individually
-            final daysDifference = endDate.difference(startDate).inDays;
-            if (daysDifference <= 7) {
-              bool hasDisabledDate = false;
-              for (int i = 1; i < daysDifference; i++) {
-                final checkDate = startDate.add(Duration(days: i));
-                if (disabled!(checkDate)) {
-                  hasDisabledDate = true;
-                  break;
-                }
-              }
-              // If disabled dates found in small range, keep only start date
-              if (hasDisabledDate) {
-                next = [startDate];
-              }
-            } else {
-              // For larger ranges, use sampling approach for better performance
-              // Check every 7th day and a few random days in between
-              bool hasDisabledDate = false;
-              final sample = <DateTime>[];
-              // Add weekly samples
-              for (int i = 7; i < daysDifference; i += 7) {
-                sample.add(startDate.add(Duration(days: i)));
-              }
-
-              // Add a few random samples for better coverage
-              if (daysDifference > 14) {
-                sample.add(startDate.add(Duration(days: daysDifference ~/ 3)));
-                sample.add(
-                  startDate.add(Duration(days: (daysDifference * 2) ~/ 3)),
-                );
-              }
-
-              // Check samples
-              for (final sampleDate in sample) {
-                if (disabled!(sampleDate)) {
-                  hasDisabledDate = true;
-                  break;
-                }
-              }
-              // If disabled dates likely exist, keep only start date
-              if (hasDisabledDate) {
-                next = [startDate];
-              }
-            }
-          }
-        }
-        update(next);
+        _processRangeMode(next);
         break;
     }
+  }
+  
+  /// Process single selection mode
+  void _processSingleMode(Selected next) {
+    _removeDisabledDates(next);
+    if (next.isNotEmpty) {
+      next = [next.last];
+    }
+    update(next);
+  }
+  
+  /// Process many selection mode
+  void _processManyMode(Selected next) {
+    _removeDisabledDates(next);
+    update(next);
+  }
+  
+  /// Process range selection mode
+  void _processRangeMode(Selected next) {
+    next = next.take(_DateRangeConstants.maxRangeDates).toList();
+    if (disabled != null) {
+      _removeDisabledDates(next);
+      if (next.length == 2) {
+        next = _validateDateRange(next.first, next.last);
+      }
+    }
+    update(next);
+  }
+  
+  /// Remove disabled dates from selection
+  void _removeDisabledDates(Selected dates) {
+    if (disabled != null) {
+      dates.removeWhere((date) => disabled!(date));
+    }
+  }
+  
+  /// Validate date range and return valid selection
+  Selected _validateDateRange(DateTime startDate, DateTime endDate) {
+    final daysDifference = endDate.difference(startDate).inDays;
+    
+    if (daysDifference <= _DateRangeConstants.smallRangeThreshold) {
+      return _validateSmallRange(startDate, endDate, daysDifference);
+    } else {
+      return _validateLargeRange(startDate, endDate, daysDifference);
+    }
+  }
+  
+  /// Validate small date range (≤7 days) by checking each day
+  Selected _validateSmallRange(DateTime startDate, DateTime endDate, int daysDifference) {
+    for (int i = 1; i < daysDifference; i++) {
+      final checkDate = startDate.add(Duration(days: i));
+      if (disabled!(checkDate)) {
+        return [startDate]; // Keep only start date if disabled dates found
+      }
+    }
+    return [startDate, endDate]; // All dates valid
+  }
+  
+  /// Validate large date range (>7 days) using sampling approach
+  Selected _validateLargeRange(DateTime startDate, DateTime endDate, int daysDifference) {
+    final sampleDates = _generateSampleDates(startDate, daysDifference);
+    
+    for (final sampleDate in sampleDates) {
+      if (disabled!(sampleDate)) {
+        return [startDate]; // Keep only start date if disabled dates likely exist
+      }
+    }
+    return [startDate, endDate]; // No disabled dates found in samples
+  }
+  
+  /// Generate sample dates for large range validation
+  List<DateTime> _generateSampleDates(DateTime startDate, int daysDifference) {
+    final sample = <DateTime>[];
+    
+    // Add weekly samples
+    for (int i = _DateRangeConstants.samplingInterval; i < daysDifference; i += _DateRangeConstants.samplingInterval) {
+      sample.add(startDate.add(Duration(days: i)));
+    }
+    
+    // Add additional samples for better coverage
+    if (daysDifference > _DateRangeConstants.additionalSamplingThreshold) {
+      sample.add(startDate.add(Duration(days: daysDifference ~/ 3)));
+      sample.add(startDate.add(Duration(days: (daysDifference * 2) ~/ 3)));
+    }
+    
+    return sample;
   }
 }
