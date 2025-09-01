@@ -16,6 +16,7 @@ This comprehensive guide demonstrates how to use all the components exported by 
   - [Date Constraints](#date-constraints)
   - [Theme Customization](#theme-customization)
   - [Internationalization](#internationalization)
+  - [Keyboard Navigation](#keyboard-navigation)
 - [Layout Options](#layout-options)
   - [Multi-Month Display](#multi-month-display)
   - [Scroll Direction](#scroll-direction)
@@ -1165,6 +1166,202 @@ class _InternationalizationExampleState extends State<InternationalizationExampl
   }
 }
 ```
+
+### Keyboard Navigation
+
+Flutter Flicker provides comprehensive keyboard navigation support for enhanced accessibility and user experience.
+
+#### Supported Keys
+
+- **Arrow Keys**: Navigate between dates
+  - `←` / `→`: Move left/right by one day
+  - `↑` / `↓`: Move up/down by one week
+- **Page Navigation**: Quick month navigation
+  - `Page Up`: Go to previous month
+  - `Page Down`: Go to next month
+- **Home/End**: Jump to month boundaries
+  - `Home`: Go to first day of current month
+  - `End`: Go to last day of current month
+- **Selection Keys**: Confirm date selection
+  - `Enter` / `Space`: Select the focused date
+- **Escape**: Clear focus or close picker
+
+#### Configuration
+
+Keyboard navigation can be configured using the `KeyboardNavigationConfig` class:
+
+```dart
+class KeyboardNavigationExample extends StatefulWidget {
+  @override
+  _KeyboardNavigationExampleState createState() => _KeyboardNavigationExampleState();
+}
+
+class _KeyboardNavigationExampleState extends State<KeyboardNavigationExample> {
+  List<DateTime> selectedDates = [];
+  bool keyboardEnabled = true;
+  bool showFocusIndicator = true;
+  bool enableQuickNavigation = true;
+  bool enableWrapNavigation = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Keyboard navigation settings
+        Container(
+          padding: EdgeInsets.all(16),
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Keyboard Navigation Settings',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  
+                  SwitchListTile(
+                    title: Text('Enable Keyboard Navigation'),
+                    subtitle: Text('Allow navigation using keyboard'),
+                    value: keyboardEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        keyboardEnabled = value;
+                      });
+                    },
+                  ),
+                  
+                  SwitchListTile(
+                    title: Text('Show Focus Indicator'),
+                    subtitle: Text('Display visual focus indicator'),
+                    value: showFocusIndicator,
+                    onChanged: (value) {
+                      setState(() {
+                        showFocusIndicator = value;
+                      });
+                    },
+                  ),
+                  
+                  SwitchListTile(
+                    title: Text('Enable Quick Navigation'),
+                    subtitle: Text('Page Up/Down and Home/End keys'),
+                    value: enableQuickNavigation,
+                    onChanged: (value) {
+                      setState(() {
+                        enableQuickNavigation = value;
+                      });
+                    },
+                  ),
+                  
+                  SwitchListTile(
+                    title: Text('Enable Wrap Navigation'),
+                    subtitle: Text('Wrap to next/previous month at boundaries'),
+                    value: enableWrapNavigation,
+                    onChanged: (value) {
+                      setState(() {
+                        enableWrapNavigation = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        
+        // Calendar with keyboard navigation
+        Flicker(
+          mode: FlickerSelectionMode.single,
+          value: selectedDates,
+          onValueChange: (dates) {
+            setState(() {
+              selectedDates = dates;
+            });
+          },
+          // Keyboard navigation is enabled by default
+          // Configuration is handled internally
+        ),
+        
+        // Keyboard shortcuts help
+        Container(
+          padding: EdgeInsets.all(16),
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Keyboard Shortcuts',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  
+                  _buildShortcutRow('←/→', 'Navigate left/right by day'),
+                  _buildShortcutRow('↑/↓', 'Navigate up/down by week'),
+                  _buildShortcutRow('Page Up/Down', 'Previous/next month'),
+                  _buildShortcutRow('Home/End', 'First/last day of month'),
+                  _buildShortcutRow('Enter/Space', 'Select focused date'),
+                  _buildShortcutRow('Escape', 'Clear focus'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildShortcutRow(String keys, String description) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 120,
+            child: Text(
+              keys,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.bold,
+                backgroundColor: Colors.grey[200],
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(description),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+#### Accessibility Features
+
+Keyboard navigation includes comprehensive accessibility support:
+
+- **Screen Reader Support**: Semantic labels for all interactive elements
+- **Focus Management**: Clear visual focus indicators
+- **ARIA Attributes**: Proper labeling for assistive technologies
+- **High Contrast**: Focus indicators work with high contrast themes
+
+#### Best Practices
+
+1. **Always Enable**: Keep keyboard navigation enabled for accessibility
+2. **Visual Feedback**: Ensure focus indicators are clearly visible
+3. **Test with Screen Readers**: Verify compatibility with assistive technologies
+4. **Document Shortcuts**: Provide keyboard shortcut documentation for users
 
 ---
 

@@ -74,6 +74,8 @@ Flicker({
 - **Date Constraints**: Min/max date limits and custom disabled date logic
 - **Theme Support**: Built-in light/dark themes with custom theme support
 - **Internationalization**: Multi-language support with locale-aware formatting
+- **Keyboard Navigation**: Complete keyboard operation support with arrow keys, Page Up/Down, Home/End, Enter/Space, and Escape
+- **Accessibility Support**: Full ARIA attributes, semantic labels, and screen reader compatibility
 
 #### Example Usage
 

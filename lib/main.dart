@@ -7,14 +7,27 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale _currentLocale = const Locale('zh', 'CN');
+
+  void _changeLocale(Locale locale) {
+    setState(() {
+      _currentLocale = locale;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
       title: 'Flicker Demo',
-      home: const DemoNavigator(),
-      locale: const Locale('zh', 'CN'),
+      home: DemoNavigator(onLocaleChange: _changeLocale),
+      locale: _currentLocale,
       supportedLocales: FlickerL10n.supportedLocales,
       localizationsDelegates: [...FlickerL10n.localizationsDelegates],
     );
@@ -22,13 +35,16 @@ class MyApp extends StatelessWidget {
 }
 
 class DemoNavigator extends StatelessWidget {
-  const DemoNavigator({super.key});
+  final Function(Locale) onLocaleChange;
+  
+  const DemoNavigator({super.key, required this.onLocaleChange});
+  
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       child: Container(
         padding: EdgeInsets.all(SpacingConstants.defaultPadding),
-        child: FlickerPickerDemo(),
+        child: FlickerPickerDemo(onLocaleChange: onLocaleChange),
       ),
     );
   }

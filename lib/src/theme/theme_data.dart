@@ -190,7 +190,9 @@ class FlickThemeData {
       return dayDisabledTextStyle;
     }
 
-    if (_isSelectedState(state)) {
+    bool selected = state.isSelected;
+
+    if (selected) {
       return daySelectedTextStyle;
     }
 
@@ -199,15 +201,10 @@ class FlickThemeData {
     }
 
     if (state.isInRange) {
-      return dayTextStyle;
+      return daySelectedTextStyle;
     }
 
     return dayTextStyle;
-  }
-
-  /// Check if the day is in a selected state (selected, range start, or range end)
-  bool _isSelectedState(_DayState state) {
-    return state.isSelected || state.isRangeStart || state.isRangeEnd;
   }
 
   /// Get appropriate decoration for a day based on its state
@@ -236,19 +233,20 @@ class FlickThemeData {
     if (state.isDisabled) {
       return dayDisabledDecoration;
     }
-
-    if (_isSelectedState(state)) {
-      return daySelectedDecoration;
+    bool selected = state.isSelected;
+    BorderRadius? radius;
+    if (state.isRangeStart == true && selected == true) {
+      radius = onlyLeftBorderRadius;
+    } else if (state.isRangeEnd == true && selected == true) {
+      radius = onlyRightBorderRadius;
+    } else if (state.isInRange == true) {
+      radius = noBorderRadius;
     }
-
-    if (state.isToday) {
-      return dayHighlightDecoration;
+    if (radius != null) {
+      return daySelectedDecoration!.copyWith(borderRadius: radius);
     }
-
-    if (state.isInRange) {
-      return dayDecoration;
-    }
-
+    if (selected) return daySelectedDecoration;
+    if (state.isToday) return dayHighlightDecoration;
     return dayDecoration;
   }
 }

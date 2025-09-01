@@ -70,8 +70,6 @@ class Flicker extends StatefulWidget {
   /// Number of months to display simultaneously (1 or 2)
   final int? viewCount;
 
-
-
   /// Scroll direction - horizontal or vertical
   final Axis? scrollDirection;
 
@@ -178,7 +176,6 @@ class _FlickerState extends State<Flicker> {
       endDate: widget.endDate,
       disabledDate: widget.disabledDate,
       dayBuilder: widget.dayBuilder,
-
       scrollDirection: widget.scrollDirection!,
       viewCount: widget.viewCount!,
       firstDayOfWeek: widget.firstDayOfWeek!,

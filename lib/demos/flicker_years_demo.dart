@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/src/views/flicker_shared.dart';
 import '../src/views/flicker_years_view.dart';
 import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import 'custom_text_widget.dart';
 
 /// Demo widget for FlickerYearsView component
 ///
@@ -37,7 +38,6 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
     });
   }
 
-
   /// Formats date for display
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -68,7 +68,17 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
     );
 
     return Container(
-      decoration: BoxDecoration(color: CupertinoColors.systemGrey6),
+      decoration: BoxDecoration(color: CupertinoColors.darkBackgroundGray
+      
+        ,
+        border: Border.all(
+          color: CupertinoColors.white,
+        
+        
+        width: 1,
+        style:BorderStyle.solid,
+        )
+      ),
       child: child,
     );
   }
@@ -79,22 +89,19 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 16,
       children: [
-        Text('• Start Year: $_startYear', style: style),
-        Text('• End Year: $_endYear', style: style),
-        Text('• Size: ${_viewSize.width} × ${_viewSize.height}', style: style),
-        Text(
-          '• Initial Date: ${_formatDate(DateTime(2025, 8, 29))}',
-          style: style,
+        DemoTexts.standardNormal('• Start Year: $_startYear'),
+        DemoTexts.standardNormal('• End Year: $_endYear'),
+        DemoTexts.standardNormal(
+          '• Size: ${_viewSize.width} × ${_viewSize.height}',
         ),
-        Text('• Selected Date: ${_formatDate(_selectedDate)}', style: style),
-        Text('• Selected Year: ${_selectedDate.year}', style: style),
+        DemoTexts.standardNormal(
+          '• Initial Date: ${_formatDate(DateTime(2025, 8, 29))}',
+        ),
+        DemoTexts.standardNormal(
+          '• Selected Date: ${_formatDate(_selectedDate)}',
+        ),
+        DemoTexts.standardNormal('• Selected Year: ${_selectedDate.year}'),
       ],
     );
   }
 }
-
-TextStyle style = TextStyle(
-  fontSize: TypographyConstants.standardFontSize,
-  fontWeight: FontWeight.normal,
-  color: CupertinoColors.black,
-);

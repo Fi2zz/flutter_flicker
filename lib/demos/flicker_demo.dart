@@ -3,6 +3,8 @@ import 'package:flutter_flicker/flicker.dart';
 import './flicker_years_demo.dart';
 import 'package:flutter_flicker/src/constants/ui_constants.dart';
 import './demo_constants.dart';
+import './custom_segmented_control.dart';
+import 'custom_text_widget.dart';
 
 /// Demo picker mode enumeration
 ///
@@ -24,7 +26,9 @@ enum DemoViewMode { picker, years }
 /// - First day of week configuration
 /// - Real-time selected dates display
 class FlickerPickerDemo extends StatefulWidget {
-  const FlickerPickerDemo({super.key});
+  final Function(Locale) onLocaleChange;
+
+  const FlickerPickerDemo({super.key, required this.onLocaleChange});
 
   @override
   State<FlickerPickerDemo> createState() => _FlickerPickerDemoState();
@@ -41,7 +45,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   bool _useDarkMode = false;
 
   /// Scroll direction configuration
-  Axis _axis = Axis.horizontal;
+  Axis _scrollDirection = Axis.horizontal;
 
   /// First day of week setting
   FirstDayOfWeek _firstDayOfWeek = FirstDayOfWeek.monday;
@@ -50,10 +54,109 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   PickerMode _flickerMode = PickerMode.basic;
 
   /// Current demo view mode
-  DemoViewMode _demoViewMode = DemoViewMode.years;
+  DemoViewMode _viewMode = DemoViewMode.picker;
 
   /// Number of months to display
   int _viewCount = 1;
+
+  int get viewCount => _scrollDirection == Axis.vertical ? 2 : _viewCount;
+
+  /// Supported locales for language switching
+  final List<Map<String, dynamic>> _supportedLocales = [
+    {'locale': const Locale('en', 'US'), 'name': 'English'},
+    {'locale': const Locale('zh', 'CN'), 'name': '中文'},
+    {'locale': const Locale('es', 'ES'), 'name': 'Español'},
+    {'locale': const Locale('fr', 'FR'), 'name': 'Français'},
+    {'locale': const Locale('de', 'DE'), 'name': 'Deutsch'},
+    {'locale': const Locale('ja', 'JP'), 'name': '日本語'},
+  ];
+
+  /// Localized text mappings
+  Map<String, Map<String, String>> get _localizedTexts => {
+    'en': {
+      'title': 'Welcome to Flicker',
+      'language': 'Language',
+      'demoView': 'Demo View',
+      'theme': 'Theme',
+      'direction': 'Direction',
+      'viewCount': 'View Count',
+      'mode': 'Mode',
+      'firstDayOfWeek': 'First Day',
+      'selectedDates': 'Selected Dates',
+      'light': 'Light',
+      'dark': 'Dark',
+      'horizontal': 'Horizontal',
+      'vertical': 'Vertical',
+      'single': 'Single',
+      'double': 'Double',
+      'basic': 'Basic',
+      'range': 'Range',
+      'many': 'Multiple',
+      'monday': 'Monday',
+      'sunday': 'Sunday',
+      'picker': 'Picker',
+      'years': 'Years',
+      'l10n': 'L10n',
+      'saturday': 'Saturday',
+      'localeBased': 'Locale Based',
+      'noSelected': 'No Selected',
+      'keyboard': 'Keyboard',
+      'keyboardNavigation': 'Keyboard Navigation',
+      'keyboardInstructions': 'Keyboard Instructions',
+      'arrowKeys': '• Arrow keys: Move focus to different dates',
+      'tabKeys': '• Tab/Shift+Tab: Switch focus between dates',
+      'enterSpace': '• Enter/Space: Select current focused date',
+      'pageKeys': '• Page Up/Down: Switch months',
+      'homeEnd': '• Home/End: Jump to beginning/end of month',
+      'escape': '• Escape: Clear selection or exit',
+    },
+    'zh': {
+      'title': '欢迎使用 Flicker',
+      'language': '语言',
+      'demoView': '演示视图',
+      'theme': '主题',
+      'direction': '方向',
+      'viewCount': '视图数量',
+      'mode': '模式',
+      'firstDayOfWeek': '每周首日',
+      'selectedDates': '已选日期',
+      'light': '浅色',
+      'dark': '深色',
+      'horizontal': '水平',
+      'vertical': '垂直',
+      'single': '单个',
+      'double': '双个',
+      'basic': '基础',
+      'range': '范围',
+      'many': '多选',
+      'monday': '周一',
+      'sunday': '周日',
+      'picker': '选择器',
+      'years': '年份',
+      'l10n': '本地化',
+      'saturday': '周六',
+      'localeBased': '基于区域',
+      'noSelected': '未选择',
+      'keyboard': '键盘',
+      'keyboardNavigation': '键盘导航',
+      'keyboardInstructions': '键盘操作说明',
+      'arrowKeys': '• 方向键：移动焦点到不同日期',
+      'tabKeys': '• Tab/Shift+Tab：在日期间切换焦点',
+      'enterSpace': '• Enter/Space：选择当前焦点日期',
+      'pageKeys': '• Page Up/Down：切换月份',
+      'homeEnd': '• Home/End：跳转到月初/月末',
+      'escape': '• Escape：清除选择或退出',
+    },
+  };
+
+  /// Get localized text
+  String _getText(String key) {
+    final locale = Localizations.localeOf(context);
+    final languageCode = locale.languageCode;
+    return _localizedTexts[languageCode]?[key] ??
+        _localizedTexts['en']?[key] ??
+        key;
+  }
 
   /// Minimum selectable date
   late DateTime? _startDate = DateTime(1920, 1, 31);
@@ -82,12 +185,12 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     //   return true;
     // }
 
-    if (date.month == 8) {
-      return date.day == 14 || date.day == 18;
-    }
     // Disable weekends (currently disabled for demo purposes)
-    // return false;
-    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    return false;
+    return date.weekday == DateTime.monday ||
+        // date.weekday == DateTime.thursday ||
+        date.day % 15 == 2 ||
+        date.day % 15 == 1;
   }
 
   @override
@@ -96,15 +199,11 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Welcome to Flicker',
-            style: TextStyle(
-              fontSize: TypographyConstants.largeTitleFontSize,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          DemoTexts.largeTitle(_getText('title'), color: CupertinoColors.white),
           SizedBox(height: SpacingConstants.verticalSpacing),
           _buildDemoViewSwitch(),
+          SizedBox(height: SpacingConstants.verticalSpacing),
+          _buildLanguageSwitch(),
           SizedBox(height: SpacingConstants.verticalSpacing),
           _buildThemeSwitch(),
           SizedBox(height: SpacingConstants.verticalSpacing),
@@ -121,10 +220,22 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       ),
     ];
 
-    if (_demoViewMode == DemoViewMode.picker) {
-      children.add(_buildDatePicker());
-    } else {
-      children.add(FlickerYearsDemo());
+    switch (_viewMode) {
+      case DemoViewMode.years:
+        children.add(FlickerYearsDemo());
+        break;
+      case DemoViewMode.picker:
+        children.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDatePicker(),
+              SizedBox(height: SpacingConstants.verticalSpacing),
+              _buildKeyboardInstructions(),
+            ],
+          ),
+        );
+        break;
     }
 
     return CupertinoPageScaffold(
@@ -143,13 +254,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   /// [title] - Label for the control
   /// [children] - Control widgets to display
   Widget _buildRow(String title, List<Widget> children) {
-    final titleWidget = Text(
-      title,
-      style: TextStyle(
-        fontSize: TypographyConstants.standardFontSize,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+    final titleWidget = DemoTexts.standardBold(title);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -161,13 +266,33 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     );
   }
 
-  /// Helper method to create segmented control option with consistent padding
-  Widget _buildSegmentedOption(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: DemoSpacingConstants.segmentedControlHorizontalPadding,
-      ),
-      child: Text(text),
+  /// Language switch control
+  ///
+  /// Allows switching between different languages
+  Widget _buildLanguageSwitch() {
+    final currentLocale = Localizations.localeOf(context);
+
+    // Create options map for CustomSegmentedControl
+    final Map<Locale, String> languageOptions = {};
+    for (final localeData in _supportedLocales) {
+      final locale = localeData['locale'] as Locale;
+      languageOptions[locale] = localeData['name'] as String;
+    }
+
+    // Find current locale or default to first one
+    Locale selectedLocale = _supportedLocales.first['locale'] as Locale;
+    for (final locale in languageOptions.keys) {
+      if (locale.languageCode == currentLocale.languageCode) {
+        selectedLocale = locale;
+        break;
+      }
+    }
+
+    return CustomSegmentedControl<Locale>(
+      title: _getText('language'),
+      value: selectedLocale,
+      options: languageOptions,
+      onValueChanged: (Locale locale) => widget.onLocaleChange(locale),
     );
   }
 
@@ -175,95 +300,71 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   ///
   /// Allows switching between picker demo and years demo
   Widget _buildDemoViewSwitch() {
-    return _buildRow('Demo View', [
-      CupertinoSegmentedControl<DemoViewMode>(
-        groupValue: _demoViewMode,
-        children: {
-          DemoViewMode.picker: _buildSegmentedOption('Picker'),
-          DemoViewMode.years: _buildSegmentedOption('Years'),
-        },
-        onValueChanged: (DemoViewMode value) {
-          setState(() {
-            _demoViewMode = value;
-          });
-        },
-      ),
-    ]);
+    return CustomSegmentedControl<DemoViewMode>(
+      title: _getText('demoView'),
+      value: _viewMode,
+      options: {
+        DemoViewMode.picker: _getText('picker'),
+        DemoViewMode.years: _getText('years'),
+      },
+      onValueChanged: (DemoViewMode value) => setState(() => _viewMode = value),
+    );
   }
 
   /// Theme switch control
   ///
   /// Allows toggling between light and dark themes
   Widget _buildThemeSwitch() {
-    return _buildRow(' Theme', [
-      CupertinoSegmentedControl<int>(
-        groupValue: _useDarkMode ? 1 : 0,
-        children: {
-          0: _buildSegmentedOption('Light'),
-          1: _buildSegmentedOption('Dark'),
-        },
-        onValueChanged: (int value) {
-          setState(() {
-            _useDarkMode = value == 1;
-          });
-        },
-      ),
-    ]);
+    return CustomSegmentedControl<int>(
+      title: _getText('theme'),
+      value: _useDarkMode ? 1 : 0,
+      options: {0: _getText('light'), 1: _getText('dark')},
+      onValueChanged: (int value) => setState(() => _useDarkMode = value == 1),
+    );
   }
 
   /// View count control
   ///
   /// Allows switching between single and dual month views
   Widget _buildViewCountSwitch() {
-    return _buildRow('ViewCount', [
-      CupertinoSegmentedControl<int>(
-        groupValue: _viewCount,
-        children: {
-          1: _buildSegmentedOption('Single View'),
-          2: _buildSegmentedOption('Double Views'),
-        },
-        onValueChanged: (int value) {
-          setState(() {
-            _viewCount = value;
-          });
-        },
-      ),
-    ]);
+    return CustomSegmentedControl<int>(
+      title: _getText('viewCount'),
+      value: _viewCount,
+      options: {1: _getText('single'), 2: _getText('double')},
+      onValueChanged: (int value) => setState(() => _viewCount = value),
+    );
   }
 
   /// First day of week control
   ///
   /// Allows configuring which day appears as the first column
   Widget _buildFirstDayOfWeekSwitch() {
-    return _buildRow('First Day Of Week', [
-      CupertinoSegmentedControl<FirstDayOfWeek>(
-        groupValue: _firstDayOfWeek,
-        children: {
-          FirstDayOfWeek.monday: _buildSegmentedOption('Monday'),
-          FirstDayOfWeek.sunday: _buildSegmentedOption('Sunday'),
-          FirstDayOfWeek.saturday: _buildSegmentedOption('Saturday'),
-          FirstDayOfWeek.locale: _buildSegmentedOption('Locale Based'),
-        },
-        onValueChanged: (FirstDayOfWeek value) {
-          setState(() {
-            _firstDayOfWeek = value;
-          });
-        },
-      ),
-    ]);
+    return CustomSegmentedControl<FirstDayOfWeek>(
+      title: _getText('firstDayOfWeek'),
+      value: _firstDayOfWeek,
+      options: {
+        FirstDayOfWeek.monday: _getText('monday'),
+        FirstDayOfWeek.sunday: _getText('sunday'),
+        FirstDayOfWeek.saturday: _getText('saturday'),
+        FirstDayOfWeek.locale: _getText('localeBased'),
+      },
+      onValueChanged: (FirstDayOfWeek value) =>
+          setState(() => _firstDayOfWeek = value),
+    );
   }
 
   /// Selection mode control
   ///
   /// Allows switching between different date selection modes
   Widget _buildModeSwitch() {
-    final child = CupertinoSegmentedControl<PickerMode>(
-      groupValue: _flickerMode,
-      children: {
-        PickerMode.basic: _buildSegmentedOption('Basic'),
-        PickerMode.single: _buildSegmentedOption('Single'),
-        PickerMode.range: _buildSegmentedOption('Range'),
-        PickerMode.many: _buildSegmentedOption('Many'),
+    return CustomSegmentedControl<PickerMode>(
+      title: _getText('mode'),
+      value: _flickerMode,
+      options: {
+        PickerMode.basic: _getText('basic'),
+        PickerMode.single: _getText('single'),
+        PickerMode.range: _getText('range'),
+        PickerMode.many: _getText('many'),
       },
       onValueChanged: (value) {
         setState(() {
@@ -283,27 +384,53 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         });
       },
     );
-    return _buildRow('Mode', [child]);
   }
 
   /// Scroll direction control
   ///
   /// Allows switching between horizontal and vertical scrolling
   Widget _buildDirectionSwitch() {
-    final child = CupertinoSegmentedControl<Axis>(
-      groupValue: _axis,
-      children: {
-        Axis.horizontal: _buildSegmentedOption('Horizontal'),
-        Axis.vertical: _buildSegmentedOption('Vertical'),
+    return CustomSegmentedControl<Axis>(
+      title: _getText('direction'),
+      value: _scrollDirection,
+      options: {
+        Axis.horizontal: _getText('horizontal'),
+        Axis.vertical: _getText('vertical'),
       },
-      onValueChanged: (value) {
-        setState(() {
-          _axis = value;
-          if (value == Axis.vertical) _viewCount = 2;
-        });
-      },
+      onValueChanged: (Axis value) => setState(() => _scrollDirection = value),
     );
-    return _buildRow(' Direction', [child]);
+  }
+
+  /// Keyboard navigation instructions
+  ///
+  /// Displays keyboard shortcuts and navigation instructions
+  Widget _buildKeyboardInstructions() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      // width: double.infinity,
+      width: 300,
+      decoration: BoxDecoration(
+        color: CupertinoColors.black,
+        border: Border.all(
+          color: CupertinoColors.white,
+          width: 1,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DemoTexts.standardBold(_getText('keyboardInstructions')),
+          const SizedBox(height: 8),
+          DemoTexts.standardNormal(_getText('arrowKeys')),
+          DemoTexts.standardNormal(_getText('tabKeys')),
+          DemoTexts.standardNormal(_getText('enterSpace')),
+          DemoTexts.standardNormal(_getText('pageKeys')),
+          DemoTexts.standardNormal(_getText('homeEnd')),
+          DemoTexts.standardNormal(_getText('escape')),
+        ],
+      ),
+    );
   }
 
   /// Main date picker builder
@@ -312,24 +439,24 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   Widget _buildDatePicker() {
     // return Container();
 
+    FlickerSelectionMode? mode;
+
     switch (_flickerMode) {
       case PickerMode.basic:
-        return _buildBasic();
 
+      // return _buildBasic();
       case PickerMode.single:
-        return _buildSingle();
-
+        mode = FlickerSelectionMode.single;
+      // return _buildSingle();
       case PickerMode.range:
-        return _buildRangeMode();
+        mode = FlickerSelectionMode.range;
+      // return _buildRangeMode();
       case PickerMode.many:
-        return _buildManyMode();
+        mode = FlickerSelectionMode.many;
     }
-  }
 
-  /// Multiple date selection demo
-  Widget _buildManyMode() {
     return Flicker(
-      mode: FlickerSelectionMode.many,
+      mode: mode,
       value: _selectedDates,
       startDate: _startDate,
       endDate: _endDate,
@@ -337,57 +464,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       onValueChange: onDatesChanged,
       theme: FlickTheme(useDarkMode: _useDarkMode),
       firstDayOfWeek: _firstDayOfWeek,
-      viewCount: _viewCount,
-      scrollDirection: _axis,
-    );
-  }
-
-  /// Basic mode demo (single date selection with horizontal scrolling)
-  Flicker _buildBasic() {
-    debugPrint('startDate: $_startDate, endDate: $_endDate');
-
-    return Flicker(
-      value: _selectedDates,
-      startDate: _startDate,
-      endDate: _endDate,
-      disabledDate: _disabledDate,
-      onValueChange: onDatesChanged,
-      theme: FlickTheme(useDarkMode: _useDarkMode),
-      mode: FlickerSelectionMode.single,
-      firstDayOfWeek: _firstDayOfWeek,
-      viewCount: _viewCount,
-      scrollDirection: _axis,
-    );
-  }
-
-  /// Single date selection demo
-  Widget _buildSingle() {
-    return Flicker(
-      value: _selectedDates,
-      startDate: _startDate,
-      endDate: _endDate,
-      disabledDate: _disabledDate,
-      onValueChange: onDatesChanged,
-      theme: FlickTheme(useDarkMode: _useDarkMode),
-      firstDayOfWeek: _firstDayOfWeek,
-      viewCount: _viewCount,
-      scrollDirection: _axis,
-    );
-  }
-
-  /// Date range selection demo
-  Widget _buildRangeMode() {
-    return Flicker(
-      mode: FlickerSelectionMode.range,
-      value: _selectedDates,
-      startDate: _startDate,
-      endDate: _endDate,
-      disabledDate: _disabledDate,
-      onValueChange: onDatesChanged,
-      theme: FlickTheme(useDarkMode: _useDarkMode),
-      firstDayOfWeek: _firstDayOfWeek,
-      viewCount: _viewCount,
-      scrollDirection: _axis,
+      viewCount: viewCount,
+      scrollDirection: _scrollDirection,
     );
   }
 
@@ -395,26 +473,16 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   ///
   /// Shows the currently selected dates in a readable format
   Widget _buildSelectedInfo() {
-    return _buildRow('Selected Dates', [
-      Text(
+    debugPrint("$_scrollDirection $_selectedDates");
+
+    return _buildRow(_getText('selectedDates'), [
+      DemoTexts.selectedInfo(
         _selectedDates.isEmpty
-            ? 'No Selected'
+            ? _getText('noSelected')
             : ' ${_selectedDates.map((e) => _formatDate(e)).join(', ')}',
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFFFFFFFF),
-        ),
       ),
       SizedBox(width: 16),
-      Text(
-        "$_axis",
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFFFFFFFF),
-        ),
-      ),
+      DemoTexts.selectedInfo("$_scrollDirection"),
     ]);
   }
 }
