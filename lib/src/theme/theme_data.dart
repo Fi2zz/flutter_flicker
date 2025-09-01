@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'theme_constants.dart';
 
 /// Theme data class containing all styling information for Flicker components
@@ -52,9 +52,6 @@ class FlickThemeData {
   /// Text style for title/header text
   final TextStyle titleTextStyle;
 
-  /// Whether to highlight today's date
-  final bool highlightToday;
-
   /// Theme identifier name (e.g., 'light', 'dark')
   final String name;
 
@@ -83,7 +80,6 @@ class FlickThemeData {
     TextStyle? daySelectedTextStyle,
     TextStyle? dayHighlightTextStyle,
     TextStyle? titleTextStyle,
-    bool? highlightToday,
     String? name,
     Brightness? brightness,
   }) {
@@ -103,7 +99,6 @@ class FlickThemeData {
       dayHighlightTextStyle:
           dayHighlightTextStyle ?? this.dayHighlightTextStyle,
       titleTextStyle: titleTextStyle ?? this.titleTextStyle,
-      highlightToday: highlightToday ?? this.highlightToday,
       name: name ?? this.name,
       brightness: brightness ?? this.brightness,
     );
@@ -126,7 +121,6 @@ class FlickThemeData {
     required this.dayDisabledTextStyle,
     required this.daySelectedTextStyle,
     required this.dayHighlightTextStyle,
-    this.highlightToday = true,
     required this.name,
     required this.brightness,
   });
@@ -145,7 +139,6 @@ class FlickThemeData {
       daySelectedTextStyle: ThemeConstants.lightDaySelectedStyle,
       dayHighlightTextStyle: ThemeConstants.lightDayHighlightStyle,
       titleTextStyle: ThemeConstants.lightTitleStyle,
-      highlightToday: true,
       name: 'light',
       brightness: Brightness.light,
     );
@@ -165,14 +158,13 @@ class FlickThemeData {
       daySelectedTextStyle: ThemeConstants.darkDaySelectedStyle,
       dayHighlightTextStyle: ThemeConstants.darkDayHighlightStyle,
       titleTextStyle: ThemeConstants.darkTitleStyle,
-      highlightToday: true,
       name: 'dark',
       brightness: Brightness.dark,
     );
   }
 
   /// Get appropriate text style for a day based on its state
-  TextStyle getDayTextStyle( {
+  TextStyle getDayTextStyle({
     required bool isSelected,
     required bool isDisabled,
     required bool isHighlighted,
@@ -183,36 +175,36 @@ class FlickThemeData {
     final dayState = _DayState(
       isSelected: isSelected,
       isDisabled: isDisabled,
-      isHighlighted: isHighlighted,
+      isToday: isHighlighted,
       isInRange: isInRange,
       isRangeStart: isRangeStart,
       isRangeEnd: isRangeEnd,
     );
-    
+
     return _getTextStyleForState(dayState);
   }
-  
+
   /// Get text style based on day state priority
   TextStyle _getTextStyleForState(_DayState state) {
     if (state.isDisabled) {
       return dayDisabledTextStyle;
     }
-    
+
     if (_isSelectedState(state)) {
       return daySelectedTextStyle;
     }
-    
-    if (state.isHighlighted) {
+
+    if (state.isToday) {
       return dayHighlightTextStyle;
     }
-    
+
     if (state.isInRange) {
       return dayTextStyle;
     }
-    
+
     return dayTextStyle;
   }
-  
+
   /// Check if the day is in a selected state (selected, range start, or range end)
   bool _isSelectedState(_DayState state) {
     return state.isSelected || state.isRangeStart || state.isRangeEnd;
@@ -230,33 +222,33 @@ class FlickThemeData {
     final dayState = _DayState(
       isSelected: isSelected,
       isDisabled: isDisabled,
-      isHighlighted: isHighlighted,
+      isToday: isHighlighted,
       isInRange: isInRange,
       isRangeStart: isRangeStart,
       isRangeEnd: isRangeEnd,
     );
-    
+
     return _getDecorationForState(dayState);
   }
-  
+
   /// Get decoration based on day state priority
   BoxDecoration? _getDecorationForState(_DayState state) {
     if (state.isDisabled) {
       return dayDisabledDecoration;
     }
-    
+
     if (_isSelectedState(state)) {
       return daySelectedDecoration;
     }
-    
-    if (state.isHighlighted) {
+
+    if (state.isToday) {
       return dayHighlightDecoration;
     }
-    
+
     if (state.isInRange) {
       return dayDecoration;
     }
-    
+
     return dayDecoration;
   }
 }
@@ -265,15 +257,15 @@ class FlickThemeData {
 class _DayState {
   final bool isSelected;
   final bool isDisabled;
-  final bool isHighlighted;
+  final bool isToday;
   final bool isInRange;
   final bool isRangeStart;
   final bool isRangeEnd;
-  
+
   const _DayState({
     required this.isSelected,
     required this.isDisabled,
-    required this.isHighlighted,
+    required this.isToday,
     required this.isInRange,
     required this.isRangeStart,
     required this.isRangeEnd,

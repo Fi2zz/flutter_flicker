@@ -372,10 +372,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     // Default date cell styling
     final theme = context.flickerTheme;
 
-    bool highlight =
-        theme.highlightToday == true &&
-        selected == false &&
-        _controller.isToday(date);
+    bool highlight = selected == false && _controller.isToday(date);
     final decoration = theme.getDayDecoration(
       isSelected: selected,
       isDisabled: isDisabled,

@@ -336,7 +336,6 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       disabledDate: _disabledDate,
       onValueChange: onDatesChanged,
       theme: FlickTheme(useDarkMode: _useDarkMode),
-
       firstDayOfWeek: _firstDayOfWeek,
       viewCount: _viewCount,
       scrollDirection: _axis,
@@ -354,7 +353,6 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
       disabledDate: _disabledDate,
       onValueChange: onDatesChanged,
       theme: FlickTheme(useDarkMode: _useDarkMode),
-
       mode: FlickerSelectionMode.single,
       firstDayOfWeek: _firstDayOfWeek,
       viewCount: _viewCount,
