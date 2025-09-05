@@ -164,7 +164,6 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     // Initialize month controller
     _controller = FlickerMonthController(
       disabled: widget.disabledDate,
-      rebuild: () => setState(() {}),
       sync: (value) => widget.onValueChange?.call(value),
     );
 
@@ -175,6 +174,10 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     // Initialize grid
     _generateGrid();
   }
+
+
+
+ 
 
   @override
   void didUpdateWidget(covariant FlickerMonthView oldWidget) {
@@ -440,6 +443,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
   @override
   void dispose() {
+    _controller.dispose();
     // Clear widget cache to prevent memory leaks
     _gridWidgetCache.clear();
     super.dispose();
@@ -447,12 +451,17 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildMonthControllerView(),
-        _buildWeekView(),
-        _buildSwipableView(),
-      ],
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, child) {
+        return Column(
+          children: [
+            _buildMonthControllerView(),
+            _buildWeekView(),
+            _buildSwipableView(),
+          ],
+        );
+      },
     );
   }
 }

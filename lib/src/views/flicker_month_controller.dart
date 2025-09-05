@@ -4,7 +4,6 @@ import 'date_helpers.dart';
 typedef Selected = List<DateTime>;
 typedef Disabled = bool Function(DateTime date);
 typedef Sync = void Function(Selected selected);
-typedef Rebuild = void Function();
 
 /// Constants for date range validation
 class _DateRangeConstants {
@@ -36,14 +35,13 @@ enum FlickerSelectionMode {
 ///
 /// Combines date selection logic and grid generation functionality
 /// into a single cohesive controller class.
-class FlickerMonthController {
+class FlickerMonthController extends ChangeNotifier {
   // ========================================
   // Selection Related Fields
   // ========================================
 
   final ValueChanged<Selected> sync;
   final bool Function(DateTime)? disabled;
-  final VoidCallback? rebuild;
   late FlickerSelectionMode mode = FlickerSelectionMode.single;
   late Selected selection = [];
 
@@ -64,11 +62,7 @@ class FlickerMonthController {
   // Constructor
   // ========================================
 
-  FlickerMonthController({
-    required this.sync,
-    required this.disabled,
-    this.rebuild,
-  });
+  FlickerMonthController({required this.sync, required this.disabled});
 
   // ========================================
   // Grid Generation Methods
@@ -98,6 +92,7 @@ class FlickerMonthController {
     _grid = DateHelpers.generateCalendar(startDate, endDate);
     _lastStartDate = startDate;
     _lastEndDate = endDate;
+    notifyListeners();
   }
 
   /// Generate grid based on optional start and end dates
@@ -225,23 +220,24 @@ class FlickerMonthController {
   void update(Selected selected) {
     if (selection == selected) return;
     selection = selected;
+    notifyListeners();
   }
 
   void change(DateTime date) {
     switch (mode) {
       case FlickerSelectionMode.single:
-        handleSingle(date);
+        selection = handleSingle(date);
         break;
       case FlickerSelectionMode.many:
-        handleMany(date);
+        selection = handleMany(date);
         break;
       case FlickerSelectionMode.range:
-        handleRange(date);
+        selection = handleRange(date);
         break;
     }
 
     sync(selection);
-    rebuild?.call();
+    notifyListeners();
   }
 
   bool get isEmpty => selection.isEmpty;
@@ -259,6 +255,7 @@ class FlickerMonthController {
   /// Handle single date selection mode
   Selected handleSingle(DateTime date) {
     if (_isDateDisabled(date)) return selection;
+
     return [date];
   }
 
@@ -518,5 +515,11 @@ class FlickerMonthController {
       sample.add(startDate.add(Duration(days: daysDifference ~/ 3)));
       sample.add(startDate.add(Duration(days: (daysDifference * 2) ~/ 3)));
     }
+  }
+
+  /// Dispose resources and clean up listeners
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
