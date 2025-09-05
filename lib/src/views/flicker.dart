@@ -1,16 +1,15 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/theme/theme.dart';
-import 'package:flutter_flicker/src/views/flicker_view_title.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
-import 'package:flutter_flicker/src/views/flicker_month_view.dart';
-import 'package:flutter_flicker/src/views/flicker_month_controller.dart';
-import 'package:flutter_flicker/src/views/flicker_fade_view.dart';
-import 'package:flutter_flicker/src/views/flicker_years_view.dart';
+import '../theme/theme.dart';
+import 'flicker_view_title.dart';
+import 'flicker_month_view.dart';
+import 'flicker_month_controller.dart';
+import 'flicker_fade_view.dart';
+import 'flicker_years_view.dart';
 import 'flicker_extensions.dart';
+import 'flicker_size_helper.dart';
 export 'flicker_month_controller.dart' show FlickerSelectionMode;
 export './flicker_month_view.dart' show FlickerDayBuilder;
 import 'date_helpers.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 /// View type enumeration
 ///
@@ -70,8 +69,6 @@ class Flicker extends StatefulWidget {
   /// Number of months to display simultaneously (1 or 2)
   final int? viewCount;
 
-
-
   /// Scroll direction - horizontal or vertical
   final Axis? scrollDirection;
 
@@ -130,7 +127,7 @@ class Flicker extends StatefulWidget {
 class _FlickerState extends State<Flicker> {
   late _FlickerViewType _viewType = _FlickerViewType.month;
   late DateTime _display = DateHelpers.maybeToday(null);
-  final GlobalKey<FlickerMonthViewState> _monthViewKey = GlobalKey();
+  late GlobalKey<FlickerMonthViewState> _monthViewKey = GlobalKey();
 
   int get _startYear {
     int start = DateHelpers.maybe100yearsAgo(widget.startDate).year;
@@ -139,6 +136,18 @@ class _FlickerState extends State<Flicker> {
 
   int get _endYear {
     return DateHelpers.maybe100yearsAfter(widget.endDate).year;
+  }
+
+  @override
+  void didUpdateWidget(covariant Flicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    //  update month view key
+    if (oldWidget.mode != widget.mode ||
+        oldWidget.viewCount != widget.viewCount ||
+        oldWidget.scrollDirection != widget.scrollDirection) {
+      _monthViewKey = GlobalKey();
+    }
   }
 
   void _onSelectYear(int year) => setState(() {
@@ -151,24 +160,7 @@ class _FlickerState extends State<Flicker> {
     _display = date;
     _viewType = _FlickerViewType.year;
   });
-  Size get _size {
-    Axis scrollDirection = widget.scrollDirection!;
-    int viewCount = widget.viewCount != null ? widget.viewCount! : 1;
-
-    double width = scrollDirection == Axis.vertical
-        ? gridViewWidth
-        : gridViewWidth * viewCount;
-
-    double height = scrollDirection == Axis.vertical
-        ? gridViewHeight * viewCount + gridBasicSize * viewCount
-        : gridViewHeight;
-    return Size(width, height);
-  }
-
-  Size get _yearSize {
-    return Size(gridViewWidth, gridViewHeight + gridBasicSize);
-  }
-
+  Size get _size => computeSize(widget.viewCount!, widget.scrollDirection!);
   Widget _buildSwipableMonthView() {
     return FlickerMonthView(
       key: _monthViewKey,
@@ -178,7 +170,6 @@ class _FlickerState extends State<Flicker> {
       endDate: widget.endDate,
       disabledDate: widget.disabledDate,
       dayBuilder: widget.dayBuilder,
-
       scrollDirection: widget.scrollDirection!,
       viewCount: widget.viewCount!,
       firstDayOfWeek: widget.firstDayOfWeek!,
@@ -196,12 +187,9 @@ class _FlickerState extends State<Flicker> {
       onTapYear: _onSelectYear,
       startYear: _startYear,
       endYear: _endYear,
-      size: _yearSize,
-      itemHeight: gridBasicSize,
+      itemHeight: baseSize,
     );
-    Widget title = SizedBox(
-      width: _yearSize.width,
-      height: gridBasicSize,
+    Widget title = BaseBox(
       child: FlickerViewTitle(
         date: _display,
         onTap: _showMonthView,
@@ -230,10 +218,7 @@ class _FlickerState extends State<Flicker> {
   Widget _builder(BuildContext context) {
     return Container(
       decoration: context.flickerTheme.decoration,
-      padding: EdgeInsets.symmetric(
-        vertical: SpacingConstants.calendarVerticalPadding,
-        horizontal: SpacingConstants.calendarHorizontalPadding,
-      ),
+      padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
       child: SizedBox(width: _size.width, child: _buildStack()),
     );
   }

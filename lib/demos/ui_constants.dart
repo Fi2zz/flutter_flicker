@@ -1,17 +1,4 @@
 // ============================================================================
-// GRID CONSTANTS
-// ============================================================================
-
-/// Calendar grid constants
-class CalendarGridConstants {
-  /// Number of days in a week (for crossAxisCount in GridView)
-  static const int daysPerWeek = 7;
-
-  /// Square aspect ratio for calendar cells
-  static const double cellAspectRatio = 1.0;
-}
-
-// ============================================================================
 // SPACING CONSTANTS
 // ============================================================================
 
@@ -35,22 +22,6 @@ class SpacingConstants {
 
   /// Title view horizontal padding
   static const double titleHorizontalPadding = 16.0;
-}
-
-// ============================================================================
-// TYPOGRAPHY CONSTANTS
-// ============================================================================
-
-/// Font size constants
-class TypographyConstants {
-  /// Large title font size
-  static const double largeTitleFontSize = 24.0;
-
-  /// Standard text font size
-  static const double standardFontSize = 16.0;
-
-  /// Small text font size
-  static const double smallFontSize = 14.0;
 }
 
 // ============================================================================
@@ -85,14 +56,4 @@ class IconDrawingConstants {
 
   /// Triangle width as percentage of container
   static const double triangleWidthRatio = 0.8;
-}
-
-// ============================================================================
-// LAYOUT CONSTANTS
-// ============================================================================
-
-/// Layout dimension constants
-class LayoutConstants {
-  /// Standard spacing between elements
-  static const double standardSpacing = 16.0;
 }

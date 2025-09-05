@@ -1,12 +1,11 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/views/flicker_month_controller.dart';
-import 'package:flutter_flicker/src/views/flicker_view_title.dart';
-import 'package:flutter_flicker/src/views/flicker_swipable_view.dart';
-import 'package:flutter_flicker/src/views/flicker_week_view.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
-import 'package:flutter_flicker/src/views/date_helpers.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
-import 'package:flutter_flicker/src/utils/performance_monitor.dart';
+import 'flicker_month_controller.dart';
+import 'flicker_view_title.dart';
+import 'flicker_swipable_view.dart';
+import 'flicker_week_view.dart';
+import 'flicker_month_grid.dart';
+import 'flicker_month_controller_view.dart';
+import 'date_helpers.dart';
 import 'flicker_extensions.dart';
 
 // ============================================================================
@@ -328,81 +327,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   // Date Cell Building Methods
   // ========================================
 
-  /// Build date cell
-  ///
-  /// [context] Build context
-  /// [date] Date, may be null (empty cell)
-  /// [index] Cell index
-  ///
-  /// Returns built date cell Widget
-  Widget _dayBuilder(BuildContext context, DateTime? date, int index) {
-    // Handle empty cells
-    if (date == null) {
-      return widget.dayBuilder != null
-          ? widget.dayBuilder!(index, null)
-          : SizedBox.shrink();
-    }
-
-    // Get date state
-    final selected = _controller.isContained(date);
-    final isRangeStart = _controller.inRange(date, 'start');
-    final isRangeEnd = _controller.inRange(date, 'end');
-    final isInRange = _controller.inRange(date, 'default');
-    final isDisabled = widget.disabledDate?.call(date) == true;
-
-    // Use custom builder if provided
-    if (widget.dayBuilder != null) {
-      final child = widget.dayBuilder!(
-        index,
-        date,
-        selected: selected,
-        disabled: isDisabled,
-        isRangeEnd: isRangeEnd,
-        isRangeStart: isRangeStart,
-        isInRange: isInRange,
-      );
-
-      return Tappable(
-        tappable: isDisabled == false,
-        onTap: () => _controller.change(date),
-        child: child,
-      );
-    }
-
-    // Default date cell styling
-    final theme = context.flickerTheme;
-
-    bool highlight = selected == false && _controller.isToday(date);
-    final decoration = theme.getDayDecoration(
-      isSelected: selected,
-      isDisabled: isDisabled,
-      isHighlighted: highlight,
-      isInRange: isInRange,
-      isRangeStart: isRangeStart,
-      isRangeEnd: isRangeEnd,
-    );
-
-    TextStyle textStyle = theme.getDayTextStyle(
-      isSelected: selected,
-      isDisabled: isDisabled,
-      isHighlighted: highlight,
-      isInRange: isInRange,
-      isRangeStart: isRangeStart,
-      isRangeEnd: isRangeEnd,
-    );
-
-    final container = Container(
-      decoration: decoration,
-      alignment: Alignment.center,
-      child: Text(date.day.toString(), style: textStyle),
-    );
-
-    return Tappable(
-      tappable: isDisabled == false,
-      onTap: () => _controller.change(date),
-      child: container,
-    );
-  }
+  // Note: Original helper methods have been moved to FlickerMonthControllerView component
 
   // ========================================
   // Swipe View Building Methods
@@ -418,79 +343,52 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   ///
   /// Returns built swipe view content
   Widget _swipableBuilder(BuildContext context, DateTime current) {
-    return PerformanceMonitor.timeOperation('swipableBuilder', () {
-      // Create cache key for this specific grid configuration
-      final cacheKey =
-          '${current.year}-${current.month}-${widget.firstDayOfWeek}-${widget.viewCount}-${widget.scrollDirection}';
+    // Generate grid data (now cached in DateHelpers)
+    final grids = DateHelpers.generateGrid(
+      current,
+      context.getFirstDayOfWeek(widget.firstDayOfWeek),
+      widget.viewCount,
+    );
 
-      // Check if we have a cached widget for this configuration
-      if (_gridWidgetCache.containsKey(cacheKey)) {
-        return _gridWidgetCache[cacheKey]!;
-      }
+    // Pre-allocate children list for better performance
+    final allChildren = <Widget>[];
 
-      // Generate grid data (now cached in DateHelpers)
-      final grids = DateHelpers.generateGrid(
-        current,
-        context.getFirstDayOfWeek(widget.firstDayOfWeek),
-        widget.viewCount,
+    // Build grid child components using FlickerMonthGrid
+    for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
+      final data = grids[gridIndex];
+
+      final child = FlickerMonthGrid(
+        gridData: data,
+        controller: _controller,
+        disabledDate: widget.disabledDate,
+        dayBuilder: widget.dayBuilder,
       );
 
-      // Pre-allocate children list for better performance
-      final allChildren = <Widget>[];
-
-      // Build grid child components with optimized iteration
-      for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
-        final data = grids[gridIndex];
-
-        // Pre-build all cells for this grid
-        final cells = List<Widget>.generate(data.length, (cellIndex) {
-          return _dayBuilder(context, data[cellIndex], cellIndex);
-        });
-
-        final child = SizedBox(
-          width: gridViewWidth,
-          height: gridViewHeight,
-          child: GridView.count(
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: CalendarGridConstants.daysPerWeek,
-            childAspectRatio: CalendarGridConstants.cellAspectRatio,
-            children: cells,
-          ),
-        );
-
-        // Add date title for vertical scrolling
-        if (widget.scrollDirection == Axis.vertical) {
-          if (gridIndex == 0) {
-            allChildren.add(FlickerViewTitle(date: _display));
-            allChildren.add(child);
-          } else if (gridIndex == grids.length - 1) {
-            final title = DateHelpers.nextMonth(_display);
-            allChildren.add(FlickerViewTitle(date: title));
-            allChildren.add(child);
-          } else {
-            allChildren.add(child);
-          }
+      // Add date title for vertical scrolling
+      if (widget.scrollDirection == Axis.vertical) {
+        if (gridIndex == 0) {
+          allChildren.add(FlickerViewTitle(date: _display));
+          allChildren.add(child);
+        } else if (gridIndex == grids.length - 1) {
+          final title = DateHelpers.nextMonth(_display);
+          allChildren.add(FlickerViewTitle(date: title));
+          allChildren.add(child);
         } else {
           allChildren.add(child);
         }
+      } else {
+        allChildren.add(child);
       }
+    }
 
-      final result = Flex(
-        direction: widget.scrollDirection,
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: allChildren,
-      );
+    final result = Flex(
+      direction: widget.scrollDirection,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: allChildren,
+    );
 
-      // Cache the built widget (limit cache size to prevent memory issues)
-      if (_gridWidgetCache.length >= 10) {
-        final oldestKey = _gridWidgetCache.keys.first;
-        _gridWidgetCache.remove(oldestKey);
-      }
-      _gridWidgetCache[cacheKey] = result;
-
-      return result;
-    });
+    return result;
   }
 
   // ========================================
@@ -522,106 +420,22 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     );
   }
 
-  /// Compute whether to show triangle based on date range
-  bool _computeShowTriangle() {
-    DateTime? startDate = widget.startDate;
-    DateTime? endDate = widget.endDate;
-    bool noRange = startDate == null && endDate == null;
-    return noRange == false && startDate!.year != endDate!.year;
-  }
 
-  /// Build left and right chevron controls
-  Map<String, Widget> _buildChevronControls() {
-    Widget left = Chevron.left(
-      touchable: _canTap(SwipeDirection.backward),
-      onTap: () => _swipeController.slide(widget.viewCount * -1),
-    );
-    Widget right = Chevron.right(
-      touchable: _canTap(SwipeDirection.forward),
-      onTap: () => _swipeController.slide(widget.viewCount),
-    );
-    return {'left': left, 'right': right};
-  }
-
-  /// Build title widget with specified parameters
-  Widget _buildTitleWidget({
-    required DateTime date,
-    bool showTriangle = false,
-    VoidCallback? onTap,
-    int flex = 1,
-    bool centerred = false,
-  }) {
-    return FlickerViewTitle(
-      date: date,
-      onTap: onTap,
-      roate: false,
-      showTriangle: showTriangle,
-      flex: flex,
-      centerred: centerred,
-    );
-  }
-
-  /// Build single view layout
-  Widget _buildSingleView(Widget left, Widget right) {
-    bool showTriangle = _computeShowTriangle();
-
-    return Row(
-      children: [
-        _buildTitleWidget(
-          date: _display,
-          showTriangle: showTriangle,
-          onTap: showTriangle ? () => widget.onShowYearView(_display) : null,
-          flex: 4,
-        ),
-        left,
-        right,
-      ],
-    );
-  }
-
-  /// Build double view layout
-  Widget _buildDoubleView(Widget left, Widget right) {
-    return Row(
-      children: [
-        SizedBox(
-          width: gridViewWidth,
-          height: gridBasicSize,
-          child: Row(
-            children: [
-              left,
-              _buildTitleWidget(date: _display, centerred: true),
-              SizedBox.shrink(),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: gridViewWidth,
-          height: gridBasicSize,
-          child: Row(
-            children: [
-              SizedBox.shrink(),
-              _buildTitleWidget(
-                date: DateHelpers.nextMonth(_display),
-                centerred: true,
-              ),
-              right,
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 
   /// Build month controller view component
   Widget _buildMonthControllerView() {
-    // Don't show controller for vertical scrolling
-    if (widget.scrollDirection == Axis.vertical) return SizedBox.shrink();
-    Map<String, Widget> chevrons = _buildChevronControls();
-    Widget left = chevrons['left']!;
-    Widget right = chevrons['right']!;
-    return widget.viewCount == 1
-        ? _buildSingleView(left, right)
-        : _buildDoubleView(left, right);
+    return FlickerMonthControllerView(
+      displayDate: _display,
+      viewCount: widget.viewCount,
+      scrollDirection: widget.scrollDirection,
+      startDate: widget.startDate,
+      endDate: widget.endDate,
+      canTapLeft: _canTap(SwipeDirection.backward),
+      canTapRight: _canTap(SwipeDirection.forward),
+      onTapLeft: () => _swipeController.slide(widget.viewCount * -1),
+      onTapRight: () => _swipeController.slide(widget.viewCount),
+      onShowYearView: widget.onShowYearView,
+    );
   }
 
   @override

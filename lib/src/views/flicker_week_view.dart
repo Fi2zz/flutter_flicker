@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
 import 'flicker_extensions.dart';
+import 'flicker_size_helper.dart';
 
 /// Week day header widget
 ///
@@ -23,13 +22,14 @@ class FlickerWeekView extends StatelessWidget {
 
     Widget child = GridView.count(
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: CalendarGridConstants.daysPerWeek,
+      crossAxisCount: 7,
       childAspectRatio: 1,
       crossAxisSpacing: 0,
       mainAxisSpacing: 0,
       children: children,
     );
-    return SizedBox(width: gridViewWidth, height: gridBasicSize, child: child);
+
+    return BaseBox(child: child);
   }
 
   /// Gets localized week day names based on first day setting

@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
+import 'flicker_shared.dart';
+import 'flicker_tappable.dart';
 import 'package:intl/intl.dart';
 import 'flicker_extensions.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
 
 /// Month/Year title widget
 ///
@@ -56,9 +56,7 @@ class FlickerViewTitle extends StatelessWidget {
       child = Tappable(
         onTap: onTap,
         tappable: true,
-        padding: EdgeInsets.symmetric(
-          horizontal: SpacingConstants.titleHorizontalPadding,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 16.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.start,

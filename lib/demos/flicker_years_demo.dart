@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
+
 import '../src/views/flicker_years_view.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import 'package:flutter_flicker/demos/ui_constants.dart';
+
+const double gridBasicSize = 40.0;
+const double gridViewWidth = 7 * gridBasicSize;
+const double gridViewHeight = 5 * gridBasicSize;
 
 /// Demo widget for FlickerYearsView component
 ///
@@ -37,7 +41,6 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
     });
   }
 
-
   /// Formats date for display
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -58,7 +61,6 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
               startYear: _startYear,
               value: _selectedDate.year,
               endYear: _endYear,
-              size: _viewSize,
               onTapYear: _onYearSelected,
               itemHeight: gridBasicSize,
             ),
@@ -94,7 +96,7 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
 }
 
 TextStyle style = TextStyle(
-  fontSize: TypographyConstants.standardFontSize,
+  fontSize: 16.0,
   fontWeight: FontWeight.normal,
   color: CupertinoColors.black,
 );

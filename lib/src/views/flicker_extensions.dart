@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/flicker.dart';
-import 'package:flutter_flicker/src/theme/theme.dart';
+import '../theme/theme.dart';
 
 /// Configuration for the first day of the week
 ///

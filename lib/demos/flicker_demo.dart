@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
 import './flicker_years_demo.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import 'package:flutter_flicker/demos/ui_constants.dart';
 import './demo_constants.dart';
 
 /// Demo picker mode enumeration
@@ -50,7 +50,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   PickerMode _flickerMode = PickerMode.basic;
 
   /// Current demo view mode
-  DemoViewMode _demoViewMode = DemoViewMode.years;
+  DemoViewMode _demoViewMode = DemoViewMode.picker;
 
   /// Number of months to display
   int _viewCount = 1;
@@ -98,10 +98,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         children: [
           const Text(
             'Welcome to Flicker',
-            style: TextStyle(
-              fontSize: TypographyConstants.largeTitleFontSize,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: SpacingConstants.verticalSpacing),
           _buildDemoViewSwitch(),
@@ -145,10 +142,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   Widget _buildRow(String title, List<Widget> children) {
     final titleWidget = Text(
       title,
-      style: TextStyle(
-        fontSize: TypographyConstants.standardFontSize,
-        fontWeight: FontWeight.bold,
-      ),
+      style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
     );
 
     return Row(
