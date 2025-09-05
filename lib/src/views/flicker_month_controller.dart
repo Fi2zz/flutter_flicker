@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_flicker/src/views/date_helpers.dart';
+import 'date_helpers.dart';
 
 typedef Selected = List<DateTime>;
 typedef Disabled = bool Function(DateTime date);
@@ -45,7 +45,7 @@ class FlickerMonthController {
   final bool Function(DateTime)? disabled;
   final VoidCallback? rebuild;
   late FlickerSelectionMode mode = FlickerSelectionMode.single;
-  late Selected selected = [];
+  late Selected selection = [];
 
   // ========================================
   // Grid Generation Fields
@@ -205,9 +205,9 @@ class FlickerMonthController {
   /// [date] - The date to check
   /// Returns true if date is between the first and last selected dates
   bool inRange(DateTime date, [String? type]) {
-    if (selected.isEmpty || mode != FlickerSelectionMode.range) return false;
-    final start = selected.first;
-    final end = selected.last;
+    if (selection.isEmpty || mode != FlickerSelectionMode.range) return false;
+    final start = selection.first;
+    final end = selection.last;
     if (type == 'start') return DateHelpers.isSameDay(date, start);
     if (type == 'end') return DateHelpers.isSameDay(date, end);
     return date.isAfter(start) && date.isBefore(end);
@@ -218,54 +218,55 @@ class FlickerMonthController {
   /// [date] - The date to check
   /// Returns true if this date is in the selected dates list
   bool isContained(DateTime date) {
-    if (selected.isEmpty) return false;
-    return selected.any((d) => DateHelpers.isSameDay(d, date));
+    if (selection.isEmpty) return false;
+    return selection.any((d) => DateHelpers.isSameDay(d, date));
   }
 
   void update(Selected selected) {
-    if (this.selected == selected) return;
-    this.selected = selected;
+    if (selection == selected) return;
+    selection = selected;
   }
 
   void change(DateTime date) {
     switch (mode) {
       case FlickerSelectionMode.single:
-        selected = handleSingle(date);
+        handleSingle(date);
         break;
       case FlickerSelectionMode.many:
-        selected = handleMany(date);
+        handleMany(date);
         break;
       case FlickerSelectionMode.range:
-        selected = handleRange(date);
+        handleRange(date);
         break;
     }
+
+    sync(selection);
     rebuild?.call();
-    sync(selected);
   }
 
-  bool get isEmpty => selected.isEmpty;
+  bool get isEmpty => selection.isEmpty;
 
   DateTime? get first {
-    if (selected.isEmpty) return null;
-    return selected.first;
+    if (selection.isEmpty) return null;
+    return selection.first;
   }
 
   DateTime? get last {
-    if (selected.isEmpty) return null;
-    return selected.last;
+    if (selection.isEmpty) return null;
+    return selection.last;
   }
 
   /// Handle single date selection mode
   Selected handleSingle(DateTime date) {
-    if (_isDateDisabled(date)) return selected;
+    if (_isDateDisabled(date)) return selection;
     return [date];
   }
 
   /// Handle multiple date selection mode
   Selected handleMany(DateTime date) {
-    if (_isDateDisabled(date)) return selected;
+    if (_isDateDisabled(date)) return selection;
 
-    final newSelection = List<DateTime>.from(selected);
+    final newSelection = List<DateTime>.from(selection);
     return _toggleDateInSelection(newSelection, date);
   }
 
@@ -292,7 +293,7 @@ class FlickerMonthController {
 
   /// Handle range date selection mode
   Selected handleRange(DateTime date) {
-    if (_isDateDisabled(date)) return selected;
+    if (_isDateDisabled(date)) return selection;
 
     if (_isEmptySelection()) {
       return [date];
@@ -310,17 +311,17 @@ class FlickerMonthController {
 
   /// Check if the selection is empty
   bool _isEmptySelection() {
-    return selected.isEmpty;
+    return selection.isEmpty;
   }
 
   /// Check if the selection contains exactly one date
   bool _isSingleDateSelection() {
-    return selected.length == 1;
+    return selection.length == 1;
   }
 
   /// Handle the second date selection in range mode
   Selected _handleSecondDateInRange(DateTime date) {
-    final startDate = selected.first;
+    final startDate = selection.first;
 
     if (DateHelpers.isSameDay(startDate, date)) {
       return [date]; // Same date selected twice, keep as single selection
@@ -348,7 +349,7 @@ class FlickerMonthController {
 
   /// Check if the selection has actually changed
   bool _isSelectionUnchanged(Selected value) {
-    return selected == value;
+    return selection == value;
   }
 
   /// Process new selection value based on current mode and constraints

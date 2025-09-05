@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_flicker/src/views/flicker_shared.dart';
+
 import '../src/views/flicker_years_view.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
-import 'custom_text_widget.dart';
+import 'package:flutter_flicker/demos/ui_constants.dart';
+
+const double gridBasicSize = 40.0;
+const double gridViewWidth = 7 * gridBasicSize;
+const double gridViewHeight = 5 * gridBasicSize;
 
 /// Demo widget for FlickerYearsView component
 ///
@@ -58,7 +61,6 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
               startYear: _startYear,
               value: _selectedDate.year,
               endYear: _endYear,
-              size: _viewSize,
               onTapYear: _onYearSelected,
               itemHeight: gridBasicSize,
             ),
@@ -68,17 +70,7 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
     );
 
     return Container(
-      decoration: BoxDecoration(color: CupertinoColors.darkBackgroundGray
-      
-        ,
-        border: Border.all(
-          color: CupertinoColors.white,
-        
-        
-        width: 1,
-        style:BorderStyle.solid,
-        )
-      ),
+      decoration: BoxDecoration(color: CupertinoColors.systemGrey6),
       child: child,
     );
   }
@@ -89,19 +81,22 @@ class _FlickerYearsDemoState extends State<FlickerYearsDemo> {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 16,
       children: [
-        DemoTexts.standardNormal('• Start Year: $_startYear'),
-        DemoTexts.standardNormal('• End Year: $_endYear'),
-        DemoTexts.standardNormal(
-          '• Size: ${_viewSize.width} × ${_viewSize.height}',
-        ),
-        DemoTexts.standardNormal(
+        Text('• Start Year: $_startYear', style: style),
+        Text('• End Year: $_endYear', style: style),
+        Text('• Size: ${_viewSize.width} × ${_viewSize.height}', style: style),
+        Text(
           '• Initial Date: ${_formatDate(DateTime(2025, 8, 29))}',
+          style: style,
         ),
-        DemoTexts.standardNormal(
-          '• Selected Date: ${_formatDate(_selectedDate)}',
-        ),
-        DemoTexts.standardNormal('• Selected Year: ${_selectedDate.year}'),
+        Text('• Selected Date: ${_formatDate(_selectedDate)}', style: style),
+        Text('• Selected Year: ${_selectedDate.year}', style: style),
       ],
     );
   }
 }
+
+TextStyle style = TextStyle(
+  fontSize: 16.0,
+  fontWeight: FontWeight.normal,
+  color: CupertinoColors.black,
+);

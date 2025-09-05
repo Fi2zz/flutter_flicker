@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_flicker/src/views/flicker_scrollview_data_manager.dart';
+import 'flicker_scrollview_data_manager.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 /// Integer range grid pagination view widget

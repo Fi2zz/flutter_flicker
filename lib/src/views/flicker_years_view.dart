@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
+import 'flicker_tappable.dart';
 import 'flicker_extensions.dart';
-import 'flicker_shared.dart';
 import 'flicker_scrollview.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import './flicker_size_helper.dart';
 
 /// Year selection view component
 ///
@@ -20,7 +20,6 @@ class FlickerYearsView extends StatelessWidget {
   final int endYear;
 
   /// Size for the component
-  final Size size;
   final double itemHeight;
 
   /// Creates a year selection view
@@ -33,7 +32,6 @@ class FlickerYearsView extends StatelessWidget {
   const FlickerYearsView({
     super.key,
     required this.onTapYear,
-    required this.size,
     required this.itemHeight,
     required this.startYear,
     required this.endYear,
@@ -44,8 +42,7 @@ class FlickerYearsView extends StatelessWidget {
   bool _disabled(int year) => year < startYear || year > endYear;
   @override
   Widget build(BuildContext context) {
-    return SizedBox.fromSize(
-      size: size,
+    return YearsBox(
       child: FlickerScrollView(
         startValue: startYear,
         endValue: endYear,
@@ -83,9 +80,7 @@ class Year extends StatelessWidget {
       tappable: !disabled,
       onTap: () => onTap(year),
       child: Container(
-        margin: EdgeInsets.symmetric(
-          vertical: SpacingConstants.smallVerticalMargin,
-        ),
+        margin: EdgeInsets.symmetric(vertical: 4.0),
         decoration: theme.getDayDecoration(
           isSelected: selected,
           isDisabled: disabled,

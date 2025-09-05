@@ -1,33 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_flicker/flicker.dart';
 import 'demos/flicker_demo.dart';
-import 'package:flutter_flicker/src/constants/ui_constants.dart';
+import 'package:flutter_flicker/demos/ui_constants.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  Locale _currentLocale = const Locale('zh', 'CN');
-
-  void _changeLocale(Locale locale) {
-    setState(() {
-      _currentLocale = locale;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
       title: 'Flicker Demo',
-      home: DemoNavigator(onLocaleChange: _changeLocale),
-      locale: _currentLocale,
+      home: const DemoNavigator(),
+      locale: const Locale('zh', 'CN'),
       supportedLocales: FlickerL10n.supportedLocales,
       localizationsDelegates: [...FlickerL10n.localizationsDelegates],
     );
@@ -35,16 +22,13 @@ class _MyAppState extends State<MyApp> {
 }
 
 class DemoNavigator extends StatelessWidget {
-  final Function(Locale) onLocaleChange;
-  
-  const DemoNavigator({super.key, required this.onLocaleChange});
-  
+  const DemoNavigator({super.key});
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       child: Container(
-        padding: EdgeInsets.all(SpacingConstants.defaultPadding),
-        child: FlickerPickerDemo(onLocaleChange: onLocaleChange),
+        padding: EdgeInsets.all(16.0),
+        child: FlickerPickerDemo(),
       ),
     );
   }
