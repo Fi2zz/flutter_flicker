@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_flicker/src/views/flicker_controller.dart';
 import '../theme/theme.dart';
 import 'flicker_view_title.dart';
 import 'flicker_month_view.dart';
@@ -9,12 +10,11 @@ import 'flicker_extensions.dart';
 import 'flicker_size_helper.dart';
 export 'flicker_month_controller.dart' show FlickerSelectionMode;
 export './flicker_month_view.dart' show FlickerDayBuilder;
-import 'date_helpers.dart';
 
 /// View type enumeration
 ///
 /// Defines the different view modes supported by the date picker
-enum _FlickerViewType {
+enum ViewType {
   /// Month view - displays a single month's date grid
   month,
 
@@ -86,7 +86,7 @@ class Flicker extends StatefulWidget {
   /// [viewCount] - Number of months to display (1 or 2)
 
   /// [scrollDirection] - Horizontal or vertical scrolling
-  Flicker({
+  const Flicker({
     super.key,
     this.mode = FlickerSelectionMode.single,
     this.value = const [],
@@ -97,24 +97,9 @@ class Flicker extends StatefulWidget {
     this.dayBuilder,
     this.firstDayOfWeek = FirstDayOfWeek.monday,
     this.theme,
-    int? viewCount = 1,
-
-    Axis? scrollDirection = Axis.horizontal,
-  }) : viewCount = _normalizeViewCount(viewCount, scrollDirection),
-       scrollDirection = scrollDirection ?? Axis.horizontal;
-
-  /// Normalize viewCount based on scrollDirection
-  static int _normalizeViewCount(int? viewCount, Axis? scrollDirection) {
-    // If scrollDirection is vertical, viewCount must be 2
-    if (scrollDirection == Axis.vertical) {
-      return 2;
-    }
-    // If viewCount is not 1 or 2, convert to 1
-    if (viewCount != 1 && viewCount != 2) {
-      return 1;
-    }
-    return viewCount ?? 1;
-  }
+    this.viewCount = 1,
+    this.scrollDirection = Axis.horizontal,
+  });
 
   @override
   State<Flicker> createState() => _FlickerState();
@@ -125,74 +110,74 @@ class Flicker extends StatefulWidget {
 /// Manages the internal state including selected dates, current view type,
 /// display date, and handles all user interactions
 class _FlickerState extends State<Flicker> {
-  late _FlickerViewType _viewType = _FlickerViewType.month;
-  late DateTime _display = DateHelpers.maybeToday(null);
-  late GlobalKey<FlickerMonthViewState> _monthViewKey = GlobalKey();
+  late FlickerController _controller;
 
-  int get _startYear {
-    int start = DateHelpers.maybe100yearsAgo(widget.startDate).year;
-    return (_endYear - start == 1) ? start - 1 : start;
-  }
-
-  int get _endYear {
-    return DateHelpers.maybe100yearsAfter(widget.endDate).year;
+  @override
+  void initState() {
+    super.initState();
+    _controller = FlickerController();
+    _controller.initialize(
+      startDate: widget.startDate,
+      endDate: widget.endDate,
+      viewCount: widget.viewCount,
+      scrollDirection: widget.scrollDirection,
+    );
   }
 
   @override
   void didUpdateWidget(covariant Flicker oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    //  update month view key
-    if (oldWidget.mode != widget.mode ||
+    // Check if any parameters that affect the controller have changed
+    if (oldWidget.startDate != widget.startDate ||
+        oldWidget.endDate != widget.endDate ||
         oldWidget.viewCount != widget.viewCount ||
         oldWidget.scrollDirection != widget.scrollDirection) {
-      _monthViewKey = GlobalKey();
+      _controller.initialize(
+        startDate: widget.startDate,
+        endDate: widget.endDate,
+        viewCount: widget.viewCount,
+        scrollDirection: widget.scrollDirection,
+      );
     }
   }
 
-  void _onSelectYear(int year) => setState(() {
-    _display = _display.copyWith(year: year);
-    _viewType = _FlickerViewType.month;
-    _monthViewKey.currentState?.updateDisplay(_display);
-  });
-  void _showMonthView() => setState(() => _viewType = _FlickerViewType.month);
-  void _showYearView(DateTime date) => setState(() {
-    _display = date;
-    _viewType = _FlickerViewType.year;
-  });
-  Size get _size => computeSize(widget.viewCount!, widget.scrollDirection!);
-  Widget _buildSwipableMonthView() {
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildMonthView() {
     return FlickerMonthView(
-      key: _monthViewKey,
       value: widget.value,
       mode: widget.mode,
-      startDate: widget.startDate,
-      endDate: widget.endDate,
+      startDate: _controller.startDate,
+      endDate: _controller.endDate,
       disabledDate: widget.disabledDate,
       dayBuilder: widget.dayBuilder,
-      scrollDirection: widget.scrollDirection!,
-      viewCount: widget.viewCount!,
+      scrollDirection: _controller.scrollDirection,
+      viewCount: _controller.viewCount,
       firstDayOfWeek: widget.firstDayOfWeek!,
-      size: _size,
+      size: _controller.size,
       onValueChange: widget.onValueChange,
-      onShowYearView: _showYearView,
+      onShowYearView: _controller.showYearView,
     );
   }
 
   Widget _buildYearsView() {
-    if (_viewType != _FlickerViewType.year) return SizedBox.shrink();
+    if (_controller.viewType != ViewType.year) return SizedBox.shrink();
 
     Widget yearView = FlickerYearsView(
-      value: _display.year,
-      onTapYear: _onSelectYear,
-      startYear: _startYear,
-      endYear: _endYear,
+      value: _controller.display.year,
+      onTapYear: _controller.selectYear,
+      startYear: _controller.startYear,
+      endYear: _controller.endYear,
       itemHeight: baseSize,
     );
     Widget title = BaseBox(
       child: FlickerViewTitle(
-        date: _display,
-        onTap: _showMonthView,
+        date: _controller.display,
+        onTap: _controller.showMonthView,
         roate: true,
         showTriangle: true,
       ),
@@ -204,11 +189,11 @@ class _FlickerState extends State<Flicker> {
     return Stack(
       children: [
         FlickerFadeView(
-          visible: _viewType == _FlickerViewType.month,
-          child: _buildSwipableMonthView(),
+          visible: _controller.viewType == ViewType.month,
+          child: _buildMonthView(),
         ),
         FlickerFadeView(
-          visible: _viewType == _FlickerViewType.year,
+          visible: _controller.viewType == ViewType.year,
           child: _buildYearsView(),
         ),
       ],
@@ -219,7 +204,7 @@ class _FlickerState extends State<Flicker> {
     return Container(
       decoration: context.flickerTheme.decoration,
       padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-      child: SizedBox(width: _size.width, child: _buildStack()),
+      child: SizedBox(width: _controller.size.width, child: _buildStack()),
     );
   }
 
@@ -227,7 +212,10 @@ class _FlickerState extends State<Flicker> {
   Widget build(BuildContext context) {
     return FlickThemeProvider(
       theme: widget.theme?.data,
-      child: Builder(builder: (context) => _builder(context)),
+      child: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, child) => _builder(context),
+      ),
     );
   }
 }
