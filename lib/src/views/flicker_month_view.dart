@@ -175,10 +175,6 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     _generateGrid();
   }
 
-
-
- 
-
   @override
   void didUpdateWidget(covariant FlickerMonthView oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -326,19 +322,6 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     return nextDate != null && _canSwipe(nextDate, direction);
   }
 
-  // ========================================
-  // Date Cell Building Methods
-  // ========================================
-
-  // Note: Original helper methods have been moved to FlickerMonthControllerView component
-
-  // ========================================
-  // Swipe View Building Methods
-  // ========================================
-
-  // Cache for built grid widgets to avoid rebuilding
-  final Map<String, Widget> _gridWidgetCache = {};
-
   /// Build swipe view content
   ///
   /// [context] Build context
@@ -354,8 +337,7 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     );
 
     // Pre-allocate children list for better performance
-    final allChildren = <Widget>[];
-
+    final children = <Widget>[];
     // Build grid child components using FlickerMonthGrid
     for (int gridIndex = 0; gridIndex < grids.length; gridIndex++) {
       final data = grids[gridIndex];
@@ -370,28 +352,26 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
       // Add date title for vertical scrolling
       if (widget.scrollDirection == Axis.vertical) {
         if (gridIndex == 0) {
-          allChildren.add(FlickerViewTitle(date: _display));
-          allChildren.add(child);
+          children.add(FlickerViewTitle(date: _display));
+          children.add(child);
         } else if (gridIndex == grids.length - 1) {
           final title = DateHelpers.nextMonth(_display);
-          allChildren.add(FlickerViewTitle(date: title));
-          allChildren.add(child);
+          children.add(FlickerViewTitle(date: title));
+          children.add(child);
         } else {
-          allChildren.add(child);
+          children.add(child);
         }
       } else {
-        allChildren.add(child);
+        children.add(child);
       }
     }
 
-    final result = Flex(
+    return Flex(
       direction: widget.scrollDirection,
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: allChildren,
+      children: children,
     );
-
-    return result;
   }
 
   // ========================================
@@ -423,8 +403,6 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
     );
   }
 
-
-
   /// Build month controller view component
   Widget _buildMonthControllerView() {
     return FlickerMonthControllerView(
@@ -444,8 +422,6 @@ class FlickerMonthViewState extends State<FlickerMonthView> {
   @override
   void dispose() {
     _controller.dispose();
-    // Clear widget cache to prevent memory leaks
-    _gridWidgetCache.clear();
     super.dispose();
   }
 

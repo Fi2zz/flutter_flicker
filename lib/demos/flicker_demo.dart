@@ -62,11 +62,8 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   late DateTime? _endDate = DateTime(2025, 9, 1);
 
   /// Handles date selection changes from the picker
-  void onDatesChanged(List<DateTime> dates) {
-    setState(() {
-      _selectedDates = dates;
-    });
-  }
+  void onDatesChanged(List<DateTime> dates) =>
+      setState(() => _selectedDates = dates);
 
   /// Formats a date for display in the demo
   String _formatDate(DateTime date) {
@@ -88,6 +85,25 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     // Disable weekends (currently disabled for demo purposes)
     // return false;
     return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+  }
+
+  void _onModeChange(PickerMode value) {
+    setState(() {
+      if (value == PickerMode.single) {
+        _selectedDates = [DateTime(2025, 9, 1), DateTime(2025, 9, 2)];
+      }
+      if (value == PickerMode.range) {
+        _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
+      }
+
+      if (value == PickerMode.basic) {
+        // _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
+        _startDate = DateTime(2025, 12, 1);
+        _endDate = DateTime(2026, 9, 2);
+        _selectedDates = [DateTime(2025, 12, 1), DateTime(2026, 1, 1)];
+      }
+      _flickerMode = value;
+    });
   }
 
   @override
@@ -259,23 +275,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         PickerMode.range: _buildSegmentedOption('Range'),
         PickerMode.many: _buildSegmentedOption('Many'),
       },
-      onValueChanged: (value) {
-        setState(() {
-          if (value == PickerMode.single) {
-            _selectedDates = [DateTime(2025, 9, 1), DateTime(2025, 9, 2)];
-          }
-          if (value == PickerMode.range) {
-            _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
-          }
-
-          if (value == PickerMode.basic) {
-            // _selectedDates = [DateTime.now(), DateTime(2025, 9, 2)];
-            _startDate = DateTime(1921, 12, 1);
-            _endDate = DateTime(2026, 9, 2);
-          }
-          _flickerMode = value;
-        });
-      },
+      onValueChanged: _onModeChange,
     );
     return _buildRow('Mode', [child]);
   }
