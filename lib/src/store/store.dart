@@ -289,14 +289,15 @@ class Store {
   /// - [props]: The configuration object containing all date picker settings
   void initialize(FlickerProps props) {
     _updateChangeSource(props);
-    _updateSelection(props.value);
-    _updateDateRange(props);
+
     _updateMode(props.mode);
+    _updateDisabledDate(props.disabledDate);
     _updateSelectionCount(props.selectionCount);
+    _updateDateRange(props);
+    _updateSelection(props.value);
     _updateFirstDayOfWeek(props.firstDayOfWeek);
     _updateViewCount(props.viewCount);
     _updateScrollDirection(props.scrollDirection);
-    _updateDisabledDate(props.disabledDate);
     onValueChange = props.onValueChange;
     dayBuilder = props.dayBuilder;
   }
@@ -415,10 +416,14 @@ class Store {
         );
       }
     }
-
     startDateSignal.value = startDate ?? DateHelpers.offsetToday(startDate, -3);
     endDateSignal.value = endDate ?? DateHelpers.offsetToday(endDate, 3);
-    if (startDate != null && selection.isEmpty) _updateDisplay(startDate);
+    if (kDebugMode) {
+      debugPrint('dateRange: $startDate - $endDate');
+    }
+    if (changeSource == ChangeSource.initialize && startDate != null) {
+      _updateDisplay(startDate);
+    }
   }
 
   /// Updates the current selection with the provided dates
@@ -441,14 +446,24 @@ class Store {
       if (value.length > selectionCount) {
         value = value.sublist(0, selectionCount);
       }
-
       selectionSignal.value.force(value);
-
-      if (kDebugMode) {
-        debugPrint('selection: ${selection.first}');
-      }
-      if (selection.isNotEmpty) _updateDisplay(selection.first!);
+      _initializeDisplay();
     }
+  }
+
+  void _initializeDisplay() {
+    if (kDebugMode) {
+      debugPrint('_initializeDisplay selection.first: ${selection.first}');
+      debugPrint('_initializeDisplay startDate: $startDate');
+    }
+
+    if (selection.isEmpty && startDate == null) {
+      return;
+    }
+    DateTime? display = selection.first;
+    if (DateHelpers.before(display, startDate)) display = startDate!;
+    if (display == null) return;
+    _updateDisplay(display);
   }
 
   /// Updates the first day of the week configuration
@@ -530,7 +545,8 @@ class Store {
   ///
   /// Parameters:
   /// - [date]: The date representing the month/year to display
-  void _updateDisplay(DateTime date) => displaySignal.value = date;
+  void _updateDisplay(DateTime date) =>
+      displaySignal.value = DateTime(date.year, date.month, date.day);
 
   /// Handles date selection from the calendar
   ///
@@ -553,6 +569,9 @@ class Store {
   /// Parameters:
   /// - [date]: The date that was selected by the user
   void onSelectDate(DateTime date) {
+    if (kDebugMode) {
+      debugPrint('onSelectDate: $date');
+    }
     if (selection.any((d) => DateHelpers.isSameDay(d, date))) {
       selection.drop(date);
     } else {

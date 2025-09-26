@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return CupertinoApp(
       title: 'Flicker Demo',
       home: home,
-      locale: const Locale('zh', 'CN'),
+      locale: const Locale('en', 'US'),
       supportedLocales: FlickerL10n.supportedLocales,
       localizationsDelegates: [...FlickerL10n.localizationsDelegates],
     );

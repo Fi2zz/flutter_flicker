@@ -26,11 +26,11 @@ class DateHelpers {
   /// Cache for storing generated date grids to improve performance
   /// Key format: "year-month-firstDayOfWeek-viewCount"
   static final Map<String, List<List<DateTime?>>> _gridCache = {};
-  
+
   /// Cache for storing generated calendar ranges
   /// Key format: "startYear-startMonth-endYear-endMonth"
   static final Map<String, List<DateTime>> _calendarCache = {};
-  
+
   /// Maximum number of entries to keep in cache before cleanup
   static const int _maxCacheSize = 100;
 
@@ -280,7 +280,7 @@ class DateHelpers {
   /// ```dart
   /// // Get date 3 months from today
   /// DateTime futureDate = DateHelpers.offsetToday(null, 3);
-  /// 
+  ///
   /// // Return existing date unchanged
   /// DateTime existingDate = DateHelpers.offsetToday(DateTime(2024, 6, 15), 3);
   /// // Returns DateTime(2024, 6, 15)
@@ -321,7 +321,7 @@ class DateHelpers {
 
       // Calculate empty cells before the first day
       final daysBefore = (first.weekday - firstDayOfWeek + 7) % 7;
-      
+
       // Calculate empty cells after the last day
       final daysAfter = (firstDayOfWeek + 6 - last.weekday + 7) % 7;
 
@@ -332,7 +332,7 @@ class DateHelpers {
 
       // Create empty cells for days before the month starts
       final left = List.generate(daysBefore, (_) => null);
-      
+
       // Create empty cells for days after the month ends
       final right = List.generate(daysAfter, (_) => null);
 
@@ -410,5 +410,14 @@ class DateHelpers {
       }
     }
     return months;
+  }
+
+  static bool before(DateTime? a, DateTime? b) {
+    if (a == null || b == null) return false;
+    return a.isBefore(b);
+  }
+  static bool after(DateTime? a, DateTime? b) {
+    if (a == null || b == null) return false;
+    return a.isAfter(b);
   }
 }

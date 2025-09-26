@@ -76,13 +76,13 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   void onValueChange(List<DateTime> dates) => (_selectedDates.value = dates);
 
   bool _disabledDate(DateTime date) {
-    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+    return date.weekday == DateTime.saturday || date.day == DateTime.now().day;
   }
 
   void _onModeChange(SelectionMode value) {
     switch (value) {
       case SelectionMode.single:
-        onValueChange([DateTime(2025, 10, 1), DateTime(2025, 12, 2)]);
+        onValueChange([DateTime(2025, 9, 2), DateTime(2025, 12, 2)]);
         _startDate.value = DateTime(2025, 10, 1);
         _endDate.value = DateTime(2025, 11, 2);
         _selectionCount.value = 1;

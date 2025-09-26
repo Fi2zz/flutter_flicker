@@ -1,6 +1,7 @@
 import 'package:flutter_flicker/src/helpers/helpers.dart';
-import 'store.dart';
 import 'package:signals/signals_flutter.dart';
+
+import 'store.dart';
 
 /// Manages calendar grid state and month navigation for the Flicker date picker
 ///
