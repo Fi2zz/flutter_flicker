@@ -1,6 +1,6 @@
 # Flicker 📅
 
-![Flutter Flicker](flutter__flicker-blue.svg)
+![Flutter Flicker](icon.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-3.8.1+-blue.svg)](https://flutter.dev/)
 
