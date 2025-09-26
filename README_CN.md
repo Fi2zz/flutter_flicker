@@ -1,8 +1,8 @@
 # Flicker 📅
 
-[![pub package](https://img.shields.io/pub/v/flutter_flicker.svg)](https://pub.dev/packages/flutter_flicker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-3.8.1+-blue.svg)](https://flutter.dev/)
+[![GitHub](https://img.shields.io/badge/GitHub-Fi2zz%2Fflutter__flicker-blue.svg)](https://github.com/Fi2zz/flutter_flicker)
 
 **中文** | [English](README.md)
 
@@ -45,7 +45,9 @@
 
 ```yaml
 dependencies:
-  flutter_flicker: ^1.0.0
+  flutter_flicker:
+    git:
+      url: https://github.com/Fi2zz/flutter_flicker.git
 ```
 
 然后运行：
@@ -80,7 +82,7 @@ Flicker(
 
 // 带自定义主题的多日期选择
 Flicker(
-  mode: SelectionMode.multiple,
+  mode: SelectionMode.many,
   theme: FlickerTheme.dark(),
   selectionCount: 5, // 限制最多选择 5 个日期
   onValueChange: (dates) {
@@ -97,7 +99,7 @@ Flicker(
 |------|------|----------|
 | `SelectionMode.single` | 选择单个日期 | 预约预订、生日选择 |
 | `SelectionMode.range` | 选择日期范围 | 酒店预订、假期规划 |
-| `SelectionMode.multiple` | 选择多个日期 | 活动策划、可用性标记 |
+| `SelectionMode.many` | 选择多个日期 | 活动策划、可用性标记 |
 
 ### 主要属性
 

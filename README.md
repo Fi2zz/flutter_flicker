@@ -1,8 +1,8 @@
 # Flicker 📅
 
-[![pub package](https://img.shields.io/pub/v/flutter_flicker.svg)](https://pub.dev/packages/flutter_flicker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Flutter](https://img.shields.io/badge/Flutter-3.8.1+-blue.svg)](https://flutter.dev/)
+[![GitHub](https://img.shields.io/badge/GitHub-Fi2zz%2Fflutter__flicker-blue.svg)](https://github.com/Fi2zz/flutter_flicker)
 
 [中文文档](README_CN.md) | **English**
 
@@ -49,7 +49,9 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_flicker: ^1.0.0
+  flutter_flicker:
+    git:
+      url: https://github.com/Fi2zz/flutter_flicker.git
 ```
 
 Then run:
