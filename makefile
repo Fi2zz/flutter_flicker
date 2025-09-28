@@ -1,7 +1,7 @@
 # Flutter Makefile
 # Common commands for Flutter development
 
-.PHONY: help run test clean deps upgrade analyze format doctor install-deps format analyze
+.PHONY: help run test clean deps upgrade  doctor install-deps format analyze
 
 # Default target
 help:
@@ -73,7 +73,9 @@ analyze:
 	flutter analyze
 
 format:
-	dart format .
+	dart format lib/ test/
+	dart fix --apply
+
 
 doctor:
 	flutter doctor
@@ -142,13 +144,3 @@ pub-outdated:
 
 pub-deps:
 	flutter pub deps
-
-
-
-format:
-	dart format lib/ test/
-	dart fix --apply
-
-analyze:
-	dart analyze
-

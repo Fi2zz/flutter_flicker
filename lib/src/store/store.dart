@@ -1,171 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_flicker/src/store/props.dart';
 import 'package:flutter_flicker/src/views/day_view.dart' show DayBuilder;
 import 'package:flutter_flicker/src/helpers/helpers.dart';
 import 'selection.dart';
+import 'enums.dart';
 import 'package:signals/signals_flutter.dart';
-
-/// Defines the first day of the week for calendar display
-///
-/// This enum provides options for configuring which day should appear
-/// as the first column in the calendar grid.
-enum FirstDayOfWeek {
-  /// Sunday as the first day of the week
-  sunday,
-
-  /// Monday as the first day of the week
-  monday,
-
-  /// Saturday as the first day of the week
-  saturday,
-
-  /// Use the locale's default first day of the week
-  locale,
-}
-
-/// Immutable configuration object for Flicker date picker properties
-///
-/// This class encapsulates all the configuration options that can be passed
-/// to the Flicker date picker widget. It provides a clean interface for
-/// customizing the behavior, appearance, and functionality of the calendar.
-///
-/// Key features:
-/// - Immutable design for predictable state management
-/// - Comprehensive configuration options
-/// - Built-in equality and hash code implementation
-/// - Support for various selection modes and customizations
-@immutable
-class FlickerProps {
-  /// The selection mode for the date picker (single, range, or multiple)
-  final SelectionMode? mode;
-
-  /// Maximum number of dates that can be selected (used with 'many' mode)
-  final int? selectionCount;
-
-  /// Function to determine if a specific date should be disabled
-  final bool Function(DateTime date)? disabledDate;
-
-  /// List of initially selected dates
-  final List<DateTime> value;
-
-  /// The earliest selectable date (null for no restriction)
-  final DateTime? startDate;
-
-  /// The latest selectable date (null for no restriction)
-  final DateTime? endDate;
-
-  /// First day of the week (0 = Sunday, 1 = Monday, etc.)
-  final int? firstDayOfWeek;
-
-  /// Number of calendar views to display (1 or 2)
-  final int? viewCount;
-
-  /// Scroll direction for the calendar (horizontal or vertical)
-  final Axis? scrollDirection;
-
-  /// Callback function called when the selection changes
-  final Function(List<DateTime>)? onValueChange;
-
-  /// Custom builder function for rendering individual day cells
-  final DayBuilder? dayBuilder;
-
-  /// Creates a new FlickerProps configuration object
-  ///
-  /// All parameters are optional and have sensible defaults.
-  /// The [value] parameter defaults to an empty list if not provided.
-  const FlickerProps({
-    this.mode,
-    this.value = const [],
-    this.startDate,
-    this.endDate,
-    this.firstDayOfWeek,
-    this.viewCount,
-    this.scrollDirection,
-    this.disabledDate,
-    this.onValueChange,
-    this.dayBuilder,
-    this.selectionCount,
-  });
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other.runtimeType != runtimeType) return false;
-    return other is FlickerProps &&
-        other.mode == mode &&
-        other.value == value &&
-        other.startDate == startDate &&
-        other.endDate == endDate &&
-        other.firstDayOfWeek == firstDayOfWeek &&
-        other.viewCount == viewCount &&
-        other.firstDayOfWeek == firstDayOfWeek &&
-        other.disabledDate == disabledDate &&
-        other.onValueChange == onValueChange &&
-        other.selectionCount == selectionCount &&
-        other.scrollDirection == scrollDirection;
-  }
-
-  /// Generates a hash code for this FlickerProps instance
-  ///
-  /// Uses Object.hash to combine all property values into a single
-  /// hash code for efficient equality comparisons and collection usage.
-  @override
-  int get hashCode => Object.hash(
-    mode,
-    value,
-    startDate,
-    endDate,
-    firstDayOfWeek,
-    viewCount,
-    scrollDirection,
-    firstDayOfWeek,
-    disabledDate,
-    onValueChange,
-    selectionCount,
-  );
-}
-
-/// Defines the current view type of the calendar
-///
-/// This enum determines whether the calendar is showing a detailed
-/// month view with individual days or a year overview for navigation.
-enum ViewType {
-  /// Detailed month view showing individual days
-  month,
-
-  /// Year overview for quick navigation between months
-  year,
-}
-
-/// Defines the selection behavior of the date picker
-///
-/// This enum controls how users can select dates and how many
-/// dates can be selected simultaneously.
-enum SelectionMode {
-  /// Allow selection of only one date at a time
-  single,
-
-  /// Allow selection of a date range (start and end date)
-  range,
-
-  /// Allow selection of multiple individual dates
-  many,
-}
-
-/// Tracks the source of selection changes for proper event handling
-///
-/// This enum helps distinguish between different types of changes
-/// to ensure appropriate responses and state updates.
-enum ChangeSource {
-  /// Change triggered by year selection in year view
-  selectYear,
-
-  /// Change triggered by date selection in month view
-  selectDate,
-
-  /// Change triggered during initial setup/configuration
-  initialize,
-}
+export 'enums.dart';
+export 'props.dart';
 
 /// Central state management store for the Flicker date picker
 ///
@@ -179,18 +21,162 @@ enum ChangeSource {
 /// - Validating date selections and disabled dates
 /// - Coordinating between different components
 /// - Providing reactive state updates through signals
+///
+/// ## Usage Examples
+///
+/// ### Basic store initialization and usage:
+/// ```dart
+/// // Create a new store instance
+/// final store = Store();
+///
+/// // Configure with props
+/// final props = Props(
+///   mode: SelectionMode.single,
+///   value: [DateTime.now()],
+///   onValueChange: (dates) => print('Selection changed: $dates'),
+/// );
+///
+/// // Initialize the store
+/// store.initialize(props);
+///
+/// // Access current state
+/// print('Current mode: ${store.mode}');
+/// print('Selected dates: ${store.selection.result}');
+/// print('Current display month: ${store.display}');
+/// ```
+///
+/// ### Listening to state changes with signals:
+/// ```dart
+/// final store = Store();
+///
+/// // Listen to selection changes
+/// store.selectionSignal.listen((selection) {
+///   print('Selection updated: ${selection.result}');
+/// });
+///
+/// // Listen to display month changes
+/// store.displaySignal.listen((displayDate) {
+///   print('Display month changed to: $displayDate');
+/// });
+///
+/// // Listen to view type changes
+/// store.viewTypeSignal.listen((viewType) {
+///   print('View type changed to: $viewType');
+/// });
+/// ```
+///
+/// ### Programmatic date selection:
+/// ```dart
+/// final store = Store();
+/// store.initialize(Props(mode: SelectionMode.range));
+///
+/// // Select a date programmatically
+/// final dateToSelect = DateTime(2024, 6, 15);
+/// store.selectDate(dateToSelect);
+///
+/// // Check if a date is selected
+/// if (store.selection.any(dateToSelect)) {
+///   print('Date is selected');
+/// }
+///
+/// // Get selection range for range mode
+/// if (store.mode == SelectionMode.range && store.selection.length == 2) {
+///   print('Range: ${store.selection.first} to ${store.selection.last}');
+/// }
+/// ```
+///
+/// ### View management:
+/// ```dart
+/// final store = Store();
+/// store.initialize(Props());
+///
+/// // Switch to year view
+/// store.switchToYearView();
+/// print('Is year view: ${store.isYearsView}');
+///
+/// // Switch back to month view
+/// store.switchToMonthView();
+/// print('Is month view: ${store.isMonthView}');
+///
+/// // Navigate to specific month
+/// store.display = DateTime(2024, 12, 1);
+/// print('Current display: ${store.display}');
+/// ```
+///
+/// ### Advanced usage with custom validation:
+/// ```dart
+/// final store = Store();
+///
+/// final props = Props(
+///   mode: SelectionMode.many,
+///   selectionCount: 3,
+///   disabledDate: (date) {
+///     // Disable weekends and past dates
+///     return date.isBefore(DateTime.now()) ||
+///            date.weekday == DateTime.saturday ||
+///            date.weekday == DateTime.sunday;
+///   },
+///   onValueChange: (dates) {
+///     print('Selected ${dates.length} dates');
+///   },
+/// );
+///
+/// store.initialize(props);
+///
+/// // Check if a date is disabled
+/// final testDate = DateTime(2024, 6, 15);
+/// if (store.disabledDate(testDate)) {
+///   print('Date $testDate is disabled');
+/// } else {
+///   store.selectDate(testDate);
+/// }
+/// ```
+///
+/// ### Integration with Flutter widgets:
+/// ```dart
+/// class MyDatePicker extends StatefulWidget {
+///   @override
+///   _MyDatePickerState createState() => _MyDatePickerState();
+/// }
+///
+/// class _MyDatePickerState extends State<MyDatePicker> {
+///   late final Store store;
+///
+///   @override
+///   void initState() {
+///     super.initState();
+///     store = Store();
+///     store.initialize(Props(
+///       mode: SelectionMode.single,
+///       onValueChange: (dates) {
+///         setState(() {
+///           // Update UI when selection changes
+///         });
+///       },
+///     ));
+///   }
+///
+///   @override
+///   Widget build(BuildContext context) {
+///     return Column(
+///       children: [
+///         Text('Selected: ${store.selection.result}'),
+///         ElevatedButton(
+///           onPressed: () => store.selectDate(DateTime.now()),
+///           child: Text('Select Today'),
+///         ),
+///       ],
+///     );
+///   }
+/// }
+/// ```
 class Store {
   /// Callback function for notifying external components of selection changes
   late Function(List<DateTime>)? onValueChange = (_) {};
 
-  /// Tracks the source of the most recent change for proper event handling
-  ChangeSource changeSource = ChangeSource.initialize;
+  late int changeHashCode = -1;
 
-  /// Reactive signal for the maximum number of selectable dates
-  final Signal<int> selectionCountSignal = signal(1);
-
-  /// Gets the current selection count limit
-  int get selectionCount => selectionCountSignal.value;
+  late ChangeSource changeSource = ChangeSource.initialize;
 
   /// Custom day builder function for rendering individual calendar cells
   late DayBuilder? dayBuilder;
@@ -225,12 +211,6 @@ class Store {
   /// Reactive signal for the current date selection state
   final Signal<Selection> selectionSignal = signal(Selection());
 
-  /// Gets the earliest selectable date
-  DateTime? get startDate => startDateSignal.value;
-
-  /// Gets the latest selectable date
-  DateTime? get endDate => endDateSignal.value;
-
   /// Gets the first day of the week (0 = Sunday, 1 = Monday, etc.)
   int get firstDayOfWeek => firstDayOfWeekSignal.value;
 
@@ -258,23 +238,12 @@ class Store {
   }
 
   Selection get selection => selectionSignal.value;
-
   DateTime get display => displaySignal.value;
   DateTime get nextDisplay => DateHelpers.nextMonth(display);
   List<DateTime> get displays => [display, nextDisplay];
-
   set display(DateTime value) => displaySignal.value = value;
-
   bool get isMonthView => viewTypeSignal.value == ViewType.month;
-
   bool get isYearsView => viewTypeSignal.value == ViewType.year;
-
-  int get startYear {
-    int start = DateHelpers.maybe100yearsAgo(startDateSignal.value).year;
-    return (endYear - start == 1) ? start - 1 : start;
-  }
-
-  int get endYear => DateHelpers.maybe100yearsAfter(endDateSignal.value).year;
 
   /// Function to determine if a specific date should be disabled
   late bool Function(DateTime date) disabledDate = (date) => false;
@@ -287,83 +256,24 @@ class Store {
   ///
   /// Parameters:
   /// - [props]: The configuration object containing all date picker settings
-  void initialize(FlickerProps props) {
-    _updateChangeSource(props);
-
-    _updateMode(props.mode);
-    _updateDisabledDate(props.disabledDate);
-    _updateSelectionCount(props.selectionCount);
-    _updateDateRange(props);
-    _updateSelection(props.value);
-    _updateFirstDayOfWeek(props.firstDayOfWeek);
+  void initialize(Props props) {
     _updateViewCount(props.viewCount);
     _updateScrollDirection(props.scrollDirection);
+    _updateDisabledDate(props.disabledDate);
+
     onValueChange = props.onValueChange;
     dayBuilder = props.dayBuilder;
+    if (!_shouldInitialize(props.changeHashCode)) return;
+    _updateMode(props.mode);
+    _updateSelection(props);
+    _updateFirstDayOfWeek(props.firstDayOfWeek);
   }
 
-  /// Updates the change source based on configuration differences
-  ///
-  /// This method determines if the current configuration differs from the
-  /// previous one and sets the change source to 'initialize' if changes
-  /// are detected. This helps track whether changes are from user interaction
-  /// or configuration updates.
-  ///
-  /// Parameters:
-  /// - [props]: The new configuration to compare against current state
-  void _updateChangeSource(FlickerProps props) {
-    if (modeSignal.value != props.mode ||
-        firstDayOfWeekSignal.value != props.firstDayOfWeek ||
-        selectionCount != props.selectionCount ||
-        startDate != props.startDate ||
-        endDate != props.endDate ||
-        firstDayOfWeek != props.firstDayOfWeek ||
-        viewCount != props.viewCount ||
-        scrollDirection != props.scrollDirection) {
-      changeSource = ChangeSource.initialize;
-    }
-  }
-
-  /// Updates the selection count based on the current selection mode
-  ///
-  /// This method validates and sets the appropriate selection count for each
-  /// selection mode. It provides debug warnings when invalid counts are provided
-  /// and automatically corrects them to maintain consistency.
-  ///
-  /// Selection count rules:
-  /// - Single mode: Always 1
-  /// - Range mode: Always 2 (start and end dates)
-  /// - Many mode: User-defined (defaults to 1 if null)
-  ///
-  /// Parameters:
-  /// - [selectionCount]: The desired maximum number of selectable dates
-  void _updateSelectionCount(int? selectionCount) {
-    switch (mode) {
-      case SelectionMode.many:
-        if (selectionCount == null && kDebugMode) {
-          debugPrint(
-            '''selectionCount cannot be null for many selection mode, auto set to 1''',
-          );
-        }
-        selectionCountSignal.value = selectionCount ?? 1;
-        break;
-      case SelectionMode.single:
-        if (selectionCount != 1 && kDebugMode) {
-          debugPrint(
-            '''selectionCount must be 1 for single selection mode  which now is $selectionCount, auto set to 1''',
-          );
-        }
-        selectionCountSignal.value = 1;
-        break;
-      case SelectionMode.range:
-        if (selectionCount != 2 && kDebugMode) {
-          debugPrint(
-            '''selectionCount must be 2 for range selection mode, auto set to 2''',
-          );
-        }
-        selectionCountSignal.value = selectionCount ?? 2;
-        break;
-    }
+  /// Whether the store should initialize with the default date range
+  bool _shouldInitialize(int nextHashCode) {
+    if (nextHashCode == changeHashCode) return false;
+    changeSource = ChangeSource.initialize;
+    return true;
   }
 
   /// Updates the disabled date validation function
@@ -405,9 +315,45 @@ class Store {
   ///
   /// Throws:
   /// - [ArgumentError]: If startDate is after endDate
-  void _updateDateRange(FlickerProps props) {
+  void _updateSelection(Props props) {
     DateTime? startDate = props.startDate;
     DateTime? endDate = props.endDate;
+
+    List<DateTime> value = props.value;
+    int? selectionCount = props.selectionCount;
+
+    if (isYearsView) {
+      viewTypeSignal.value = ViewType.month;
+    }
+
+    // selection.reset();
+    switch (mode) {
+      case SelectionMode.many:
+        if (selectionCount == null && kDebugMode) {
+          debugPrint(
+            '''selectionCount cannot be null for many selection mode, auto set to 1''',
+          );
+        }
+        selectionSignal.value.maxCount = selectionCount ?? 1;
+        break;
+      case SelectionMode.single:
+        if (selectionCount != 1 && kDebugMode) {
+          debugPrint(
+            '''selectionCount must be 1 for single selection mode  which now is $selectionCount, auto set to 1''',
+          );
+        }
+        selectionSignal.value.maxCount = selectionCount;
+
+        break;
+      case SelectionMode.range:
+        if (selectionCount != 2 && kDebugMode) {
+          debugPrint(
+            '''selectionCount must be 2 for range selection mode, auto set to 2''',
+          );
+        }
+        selectionSignal.value.maxCount = selectionCount ?? 2;
+        break;
+    }
 
     if (startDate != null && endDate != null) {
       if (startDate.isAfter(endDate)) {
@@ -416,52 +362,27 @@ class Store {
         );
       }
     }
-    startDateSignal.value = startDate ?? DateHelpers.offsetToday(startDate, -3);
-    endDateSignal.value = endDate ?? DateHelpers.offsetToday(endDate, 3);
+    startDateSignal.value = startDate;
+    endDateSignal.value = endDate;
     if (kDebugMode) {
-      debugPrint('dateRange: $startDate - $endDate');
+      debugPrint('startDateSignal.value: ${startDateSignal.value}');
+      debugPrint('endDateSignal.value: ${endDateSignal.value}');
     }
-    if (changeSource == ChangeSource.initialize && startDate != null) {
-      _updateDisplay(startDate);
-    }
+
+    selectionSignal.value.force(value);
+    if (changeSource == ChangeSource.initialize) _initializeDisplay(startDate);
   }
 
-  /// Updates the current selection with the provided dates
-  ///
-  /// This method initializes the selection state during configuration.
-  /// It validates the selection count against the current limit and
-  /// updates the display to show the first selected date.
-  ///
-  /// Behavior:
-  /// - Only processes during initialization phase
-  /// - Truncates selection if it exceeds the selection count limit
-  /// - Updates display to first selected date if selection is not empty
-  /// - Provides debug output for the first selected date
-  ///
-  /// Parameters:
-  /// - [value]: List of initially selected dates
-  void _updateSelection(List<DateTime> value) {
-    if (changeSource == ChangeSource.initialize) {
-      selectionSignal.value.selection = [];
-      if (value.length > selectionCount) {
-        value = value.sublist(0, selectionCount);
-      }
-      selectionSignal.value.force(value);
-      _initializeDisplay();
-    }
-  }
-
-  void _initializeDisplay() {
+  void _initializeDisplay(DateTime? startDate) {
     if (kDebugMode) {
+      debugPrint('_initializeDisplay selection.result: ${selection.result}');
       debugPrint('_initializeDisplay selection.first: ${selection.first}');
       debugPrint('_initializeDisplay startDate: $startDate');
     }
-
-    if (selection.isEmpty && startDate == null) {
-      return;
-    }
+    if (selection.isEmpty && startDate == null) return;
+    if (startDate != null) _updateDisplay(startDate);
     DateTime? display = selection.first;
-    if (DateHelpers.before(display, startDate)) display = startDate!;
+    if (DateHelpers.before(display, startDate)) display = startDate;
     if (display == null) return;
     _updateDisplay(display);
   }
@@ -531,11 +452,10 @@ class Store {
   /// - [year]: The selected year to navigate to
   void selectYear(int year) {
     viewTypeSignal.value = ViewType.month;
-
     if (display.year == year) return;
-    selectionSignal.value.reset();
     _notifyChanged(ChangeSource.selectYear);
-    _updateDisplay(displaySignal.value.copyWith(year: year));
+    DateTime next = DateTime(year, display.month, display.day);
+    _updateDisplay(next);
   }
 
   /// Updates the currently displayed month/year
@@ -545,8 +465,9 @@ class Store {
   ///
   /// Parameters:
   /// - [date]: The date representing the month/year to display
-  void _updateDisplay(DateTime date) =>
-      displaySignal.value = DateTime(date.year, date.month, date.day);
+  void _updateDisplay(DateTime date) {
+    displaySignal.value = DateTime(date.year, date.month, date.day);
+  }
 
   /// Handles date selection from the calendar
   ///
@@ -572,16 +493,8 @@ class Store {
     if (kDebugMode) {
       debugPrint('onSelectDate: $date');
     }
-    if (selection.any((d) => DateHelpers.isSameDay(d, date))) {
-      selection.drop(date);
-    } else {
-      if (selection.length + 1 > selectionCount ||
-          hasDisabledDatesInRange(date)) {
-        selection.reset();
-      }
-      selection.push(date);
-    }
-    if (mode != SelectionMode.single) selection.sort();
+    if (_hasDisabledDatesInRange(date)) selection.reset();
+    selection.update(date);
     _notifyChanged(ChangeSource.selectDate);
     if (selection.isNotEmpty) _updateDisplay(selection.first!);
   }
@@ -604,9 +517,8 @@ class Store {
   /// Returns:
   /// - true if the range would include disabled dates
   /// - false if the range is valid or validation doesn't apply
-  bool hasDisabledDatesInRange(DateTime targetDate) {
+  bool _hasDisabledDatesInRange(DateTime targetDate) {
     if (selection.length <= 0) return false;
-
     if (selection.length != 1 || mode != SelectionMode.range) {
       return false;
     }

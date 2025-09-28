@@ -2,11 +2,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/gestures.dart';
 
 /// Enumeration for swipe directions
-enum SwipeDirection { 
+enum SwipeDirection {
   /// Swipe forward (left-to-right or top-to-bottom)
-  forward, 
+  forward,
+
   /// Swipe backward (right-to-left or bottom-to-top)
-  backward 
+  backward,
 }
 
 /// Builder function type for creating swipable view items
@@ -41,13 +42,13 @@ typedef SwipeValidationCallback =
 class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
   /// The minimum distance required to trigger a swipe gesture
   final double swipeThreshold;
-  
+
   /// The direction of scrolling (horizontal or vertical)
   final Axis scrollDirection;
 
   /// The starting position of the pan gesture
   double _startPosition = 0.0;
-  
+
   /// Whether the gesture conflict has been resolved
   bool _hasResolvedConflict = false;
 
@@ -95,7 +96,7 @@ class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
       if (totalDelta > swipeThreshold * 0.3 && velocity > 3.0) {
         _hasResolvedConflict = true;
         resolve(GestureDisposition.accepted);
-      } 
+      }
       // Late resolution for slower but definitive gestures
       else if (totalDelta > swipeThreshold * 0.8) {
         _hasResolvedConflict = true;
@@ -120,12 +121,12 @@ class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
 /// Usage:
 /// ```dart
 /// final controller = SwipeController();
-/// 
+///
 /// SwipableView(
 ///   controller: controller,
 ///   // ... other properties
 /// )
-/// 
+///
 /// // Navigate programmatically
 /// controller.slide(1);  // Move forward one page
 /// controller.slide(-2); // Move backward two pages
@@ -133,7 +134,7 @@ class _DelayedPanGestureRecognizer extends PanGestureRecognizer {
 class SwipeController {
   /// The page controller used for navigation
   PageController? _pageController;
-  
+
   /// Function to get the current page index
   int Function()? _getCurrentIndex;
 
@@ -286,13 +287,13 @@ class SwipableView<T> extends StatefulWidget {
 class _SwipableViewState<T> extends State<SwipableView<T>> {
   /// Controller for managing page navigation
   late PageController _pageController;
-  
+
   /// Current active page index
   late int _currentIndex;
 
   /// Starting position of the current pan gesture
   double _panStartPosition = 0.0;
-  
+
   /// Whether a pan gesture is currently in progress
   bool _isPanning = false;
 
@@ -357,8 +358,8 @@ class _SwipableViewState<T> extends State<SwipableView<T>> {
 
     // Check if swipe threshold and velocity requirements are met
     if (delta.abs() > widget.swipeThreshold && velocity.abs() > 1.0) {
-      final isForward = delta < 0;  // Negative delta = forward swipe
-      final isReverse = delta > 0;  // Positive delta = backward swipe
+      final isForward = delta < 0; // Negative delta = forward swipe
+      final isReverse = delta > 0; // Positive delta = backward swipe
 
       if (isForward) {
         // Validate forward swipe
@@ -469,17 +470,18 @@ class _SwipableViewState<T> extends State<SwipableView<T>> {
   Widget build(BuildContext context) {
     // Return empty widget if no items to display
     if (widget.items.isEmpty) return const SizedBox.shrink();
-    
+
     // Create the PageView with custom configuration
     Widget child = PageView.builder(
       controller: _pageController,
       scrollDirection: widget.scrollDirection,
       itemCount: null, // Infinite scrolling
-      physics: const NeverScrollableScrollPhysics(), // Disable default scrolling
+      physics:
+          const NeverScrollableScrollPhysics(), // Disable default scrolling
       onPageChanged: _handlePageChanged,
       itemBuilder: _buildItem,
     );
-    
+
     // Wrap with custom gesture detector for swipe handling
     return RawGestureDetector(
       behavior: HitTestBehavior.translucent,

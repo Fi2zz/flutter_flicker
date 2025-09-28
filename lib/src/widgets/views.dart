@@ -264,7 +264,7 @@ class TransparencableView extends StatelessWidget {
       curve: Curves.easeInOut, // Smooth animation curve
       child: IgnorePointer(
         ignoring: transparent,
-        child: child,
+        child: transparent ? null : child,
       ), // Disable interactions when hidden
     );
   }

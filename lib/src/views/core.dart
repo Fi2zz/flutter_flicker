@@ -58,7 +58,7 @@ class Core extends StatefulWidget {
   /// - Callback functions
   /// - Display preferences
   /// - Custom builders
-  final FlickerProps props;
+  final Props props;
 
   /// Optional theme override for styling the date picker
   ///

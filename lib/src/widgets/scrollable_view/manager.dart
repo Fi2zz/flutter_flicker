@@ -26,10 +26,6 @@ class Manager<T> {
   /// Number of columns in the grid layout
   static const int columns = 4;
 
-  /// Number of items per page for pagination
-  static const int itemsPerPage = 20;
-
-  /// Number of rows per page (itemsPerPage / columns)
   static const int rowsPerPage = 5;
 
   /// The starting value of the data range
@@ -125,7 +121,10 @@ class Manager<T> {
   /// when it's first needed, improving startup performance.
   void _ensureDataGenerated() {
     if (_allDataItems == null) {
-      _allDataItems = generateAllData();
+      _allDataItems = List.generate(
+        endValue - startValue + 1,
+        (index) => startValue + index,
+      );
       _totalDataLength = _allDataItems!.length;
     }
   }
@@ -238,48 +237,11 @@ class Manager<T> {
     _pagingController.refresh();
   }
 
-  /// Forces generation of all data rows
-  ///
-  /// Ensures that the complete data set has been generated.
-  /// This can be useful for preloading data.
-  void generateAllDataRows() {
-    _ensureDataGenerated();
-  }
-
   /// Disposes of resources used by the manager
   ///
   /// Cleans up the paging controller to prevent memory leaks.
   /// Call this when the manager is no longer needed.
   void dispose() {
     _pagingController.dispose();
-  }
-
-  /// Generates the complete data set from start to end value
-  ///
-  /// Creates a list of integers from [startValue] to [endValue], then
-  /// pads the list to ensure it's divisible by [itemsPerPage] for
-  /// consistent pagination.
-  ///
-  /// Returns a list of all data items
-  List<int> generateAllData() {
-    int start = startValue;
-    int end = endValue;
-
-    // Generate the main data range
-    final result = <int>[];
-    for (int i = start; i <= end; i++) {
-      result.add(i);
-    }
-
-    // Pad to make divisible by itemsPerPage for consistent pagination
-    final remainder = result.length % itemsPerPage;
-    if (remainder != 0) {
-      final itemsToAdd = itemsPerPage - remainder;
-      for (int i = 0; i < itemsToAdd; i++) {
-        result.add(end + 1 + i);
-      }
-    }
-
-    return result;
   }
 }

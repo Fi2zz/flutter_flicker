@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/views/day_view.dart';
 import 'package:flutter_flicker/src/store/grid.dart';
@@ -101,8 +100,8 @@ class MonthViewState extends State<MonthView> {
   /// Returns true if the navigation would exceed boundaries
   bool _reachBoundary(Store store, DateTime date, SwipeDirection direction) {
     final boundaryDate = direction == SwipeDirection.forward
-        ? store.endDate
-        : store.startDate;
+        ? store.endDateSignal.value
+        : store.startDateSignal.value;
     if (boundaryDate == null) return direction == SwipeDirection.forward;
     final nextMonth = direction == SwipeDirection.forward
         ? DateHelpers.nextMonth(boundaryDate)
@@ -155,9 +154,6 @@ class MonthViewState extends State<MonthView> {
   ///
   /// Returns a [Widget] containing the formatted calendar grid
   Widget _buildGrid(List<DateTime?> data, Store store) {
-    if (kDebugMode) {
-      debugPrint('MonthView _buildGrid data.length: ${data.length}');
-    }
     // Use List.filled for better performance with known size
     final children = List<Widget>.filled(data.length, const SizedBox.shrink());
     // Build cells only for non-null dates to reduce widget creation
@@ -234,7 +230,10 @@ class MonthViewState extends State<MonthView> {
   Widget build(BuildContext context) {
     final store = Context.storeOf(context);
     // Initialize the calendar grid with the configured date range
-    _grid.generateCalendar(store.startDate!, store.endDate!);
+    _grid.generateCalendar(
+      store.startDateSignal.value,
+      store.endDateSignal.value,
+    );
 
     // Use Watch for reactive updates when signals change
     return Watch(

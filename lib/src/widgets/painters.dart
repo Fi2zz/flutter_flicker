@@ -69,7 +69,7 @@ class Chevron extends StatelessWidget {
 class _ChevronPainter extends CustomPainter {
   /// Direction of the chevron ('left' or 'right')
   final String direction;
-  
+
   /// Color for the chevron stroke
   final Color color;
 
@@ -89,9 +89,12 @@ class _ChevronPainter extends CustomPainter {
     // Configure paint for smooth, rounded chevron
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2.0 // Consistent stroke width
-      ..strokeCap = StrokeCap.round // Rounded line ends
-      ..strokeJoin = StrokeJoin.round // Rounded corners
+      ..strokeWidth =
+          2.0 // Consistent stroke width
+      ..strokeCap = StrokeCap
+          .round // Rounded line ends
+      ..strokeJoin = StrokeJoin
+          .round // Rounded corners
       ..style = PaintingStyle.stroke; // Outline only
 
     final path = Path();
@@ -103,7 +106,10 @@ class _ChevronPainter extends CustomPainter {
     if (direction == 'left') {
       path.moveTo(center.dx + width / 2, center.dy - height / 2); // Top right
       path.lineTo(center.dx - width / 2, center.dy); // Center left (point)
-      path.lineTo(center.dx + width / 2, center.dy + height / 2); // Bottom right
+      path.lineTo(
+        center.dx + width / 2,
+        center.dy + height / 2,
+      ); // Bottom right
     } else {
       // Draw right-pointing chevron (→)
       path.moveTo(center.dx - width / 2, center.dy - height / 2); // Top left
@@ -141,12 +147,12 @@ class _ChevronPainter extends CustomPainter {
 ///   reverse: false, // Points up
 ///   color: Colors.blue,
 /// )
-/// 
+///
 /// Triangle(
 ///   reverse: true, // Points down
 ///   color: Colors.red,
 /// )
-/// 
+///
 /// Triangle(
 ///   reverse: null, // Hidden
 ///   color: Colors.green,
@@ -156,18 +162,18 @@ class Triangle extends StatelessWidget {
   /// Controls the triangle orientation and visibility
   ///
   /// - `false`: Triangle points up (▲)
-  /// - `true`: Triangle points down (▼) 
+  /// - `true`: Triangle points down (▼)
   /// - `null`: Triangle is hidden (returns empty widget)
   final bool? reverse;
-  
+
   /// Color of the triangle fill
   final Color color;
-  
+
   /// Creates a triangle widget
   ///
   /// The [color] is required, while [reverse] controls orientation and visibility.
   const Triangle({super.key, this.reverse, required this.color});
-  
+
   /// Builds the triangle widget with optional vertical flipping
   ///
   /// Returns an empty widget if [reverse] is null, otherwise creates a
@@ -177,7 +183,7 @@ class Triangle extends StatelessWidget {
   Widget build(BuildContext context) {
     // Hide triangle when reverse is null
     if (reverse == null) return const SizedBox.shrink();
-    
+
     return Transform.scale(
       scaleY: reverse == true ? -1.0 : 1.0, // Flip vertically if reversed
       alignment: Alignment.center, // Scale from center
@@ -228,13 +234,16 @@ class _TrianglePainter extends CustomPainter {
     final centerY = size.height / 2;
     final height = size.height * 0.4; // Triangle height (40% of canvas)
     final width = size.width * 0.8; // Triangle width (80% of canvas)
-    
+
     // Create triangle path (pointing up)
-    path.moveTo(centerX, centerY + height / 2); // Bottom center (apex when flipped)
+    path.moveTo(
+      centerX,
+      centerY + height / 2,
+    ); // Bottom center (apex when flipped)
     path.lineTo(centerX - width / 2, centerY - height / 2); // Top left
     path.lineTo(centerX + width / 2, centerY - height / 2); // Top right
     path.close(); // Close the path to create a filled shape
-    
+
     canvas.drawPath(path, paint);
   }
 

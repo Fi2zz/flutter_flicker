@@ -67,7 +67,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
   final Signal<Brightness> _brightness = signal(Brightness.light);
   final Signal<Axis> _scrollDirection = signal(Axis.horizontal);
   final Signal<int> _selectionCount = signal(1);
-  final Signal<SelectionMode> _mode = signal(SelectionMode.single);
+  final Signal<SelectionMode> _mode = signal(SelectionMode.many);
   final Signal<FirstDayOfWeek> _firstDayOfWeek = signal(FirstDayOfWeek.monday);
   final Signal<int> _viewCount = signal(1);
   final Signal<DateTime?> _startDate = signal(DateTime(2025, 9, 1));
@@ -83,9 +83,11 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
     switch (value) {
       case SelectionMode.single:
         onValueChange([DateTime(2025, 9, 2), DateTime(2025, 12, 2)]);
-        _startDate.value = DateTime(2025, 10, 1);
-        _endDate.value = DateTime(2025, 11, 2);
+        // _startDate.value = DateTime(2025, 9, 1);
+        // _endDate.value = DateTime(2025, 11, 2);
         _selectionCount.value = 1;
+        _endDate.value = null;
+        _startDate.value = null;
         break;
       case SelectionMode.range:
         _selectionCount.value = 2;
@@ -95,6 +97,7 @@ class _FlickerPickerDemoState extends State<FlickerPickerDemo> {
         _selectionCount.value = 4;
         onValueChange([
           DateTime(2025, 12, 1),
+          DateTime(2025, 12, 6),
           DateTime(2026, 1, 1),
           DateTime(2026, 1, 2),
           DateTime(2026, 1, 3),

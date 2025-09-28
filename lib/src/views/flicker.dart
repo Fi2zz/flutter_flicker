@@ -1,8 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_flicker/src/l10n/i10n.dart';
-import 'package:flutter_flicker/src/store/store.dart' show FirstDayOfWeek;
-import 'package:flutter_flicker/src/store/store.dart' show FlickerProps;
-import 'package:flutter_flicker/src/store/store.dart' show SelectionMode;
+import 'package:flutter_flicker/src/store/store.dart';
 import 'package:flutter_flicker/src/theme/theme.dart';
 
 import 'core.dart' show Core;
@@ -285,7 +283,7 @@ class Flicker extends StatelessWidget {
   /// Builds the Flicker date picker widget
   ///
   /// This method constructs the complete date picker by:
-  /// 1. Converting widget properties into a [FlickerProps] configuration object
+  /// 1. Converting widget properties into a [Props] configuration object
   /// 2. Resolving the first day of week based on locale if needed
   /// 3. Delegating to the [Core] widget for actual rendering
   ///
@@ -296,7 +294,7 @@ class Flicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Create props object with all configuration
-    FlickerProps props = FlickerProps(
+    Props props = Props(
       mode: mode, // Selection behavior (single, range, multiple)
       value: value, // Currently selected dates
       startDate: startDate, // Minimum selectable date

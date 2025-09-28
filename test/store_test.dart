@@ -24,10 +24,7 @@ void main() {
       });
 
       test('should initialize with custom props', () {
-        final props = const FlickerProps(
-          mode: SelectionMode.range,
-          viewCount: 2,
-        );
+        final props = const Props(mode: SelectionMode.range, viewCount: 2);
 
         store.initialize(props);
 
@@ -47,7 +44,7 @@ void main() {
       });
 
       test('should handle range selection mode', () {
-        final props = const FlickerProps(mode: SelectionMode.range);
+        final props = const Props(mode: SelectionMode.range);
         store.initialize(props);
 
         final startDate = DateTime(2024, 1, 15);
@@ -61,7 +58,7 @@ void main() {
       });
 
       test('should handle multiple selection mode', () {
-        final props = const FlickerProps(mode: SelectionMode.many);
+        final props = const Props(mode: SelectionMode.many);
         store.initialize(props);
 
         final date1 = DateTime(2024, 1, 15);
@@ -89,7 +86,7 @@ void main() {
       });
 
       test('should handle double views correctly', () {
-        final props = const FlickerProps(viewCount: 2);
+        final props = const Props(viewCount: 2);
         store.initialize(props);
 
         expect(store.isDoubleViews, isTrue);
@@ -131,22 +128,11 @@ void main() {
         final startDate = DateTime(2024, 1, 1);
         final endDate = DateTime(2024, 12, 31);
 
-        final props = FlickerProps(startDate: startDate, endDate: endDate);
+        final props = Props(startDate: startDate, endDate: endDate);
         store.initialize(props);
 
-        expect(store.startDate, startDate);
-        expect(store.endDate, endDate);
-      });
-
-      test('should calculate year range correctly', () {
-        final startDate = DateTime(2020, 1, 1);
-        final endDate = DateTime(2030, 12, 31);
-
-        final props = FlickerProps(startDate: startDate, endDate: endDate);
-        store.initialize(props);
-
-        expect(store.startYear, lessThanOrEqualTo(2020));
-        expect(store.endYear, greaterThanOrEqualTo(2030));
+        expect(store.startDateSignal.value, startDate);
+        expect(store.endDateSignal.value, endDate);
       });
     });
 
@@ -157,7 +143,7 @@ void main() {
       });
 
       test('should handle vertical scroll direction', () {
-        final props = const FlickerProps(scrollDirection: Axis.vertical);
+        final props = const Props(scrollDirection: Axis.vertical);
         store.initialize(props);
 
         expect(store.isVertical, isTrue);
@@ -171,7 +157,7 @@ void main() {
           return date.weekday == DateTime.sunday;
         }
 
-        final props = FlickerProps(disabledDate: disabledDateFunction);
+        final props = Props(disabledDate: disabledDateFunction);
         store.initialize(props);
 
         final sunday = DateTime(2024, 1, 7); // A Sunday
@@ -189,7 +175,7 @@ void main() {
         expect(store.selection.isNotEmpty, isTrue);
 
         // Switch to range mode
-        final props = const FlickerProps(mode: SelectionMode.range);
+        final props = const Props(mode: SelectionMode.range);
         store.initialize(props);
 
         // Selection should be maintained during mode switch

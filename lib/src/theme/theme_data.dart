@@ -407,27 +407,13 @@ class FlickThemeData {
   /// a specific priority order to ensure consistent styling.
   TextStyle _getTextStyleForState(_DayState state) {
     // Disabled state has highest priority
-    if (state.isDisabled) {
-      return dayDisabledTextStyle;
-    }
-
-    bool selected = state.isSelected;
-
+    if (state.isDisabled) return dayDisabledTextStyle;
     // Selected state has second highest priority
-    if (selected) {
-      return daySelectedTextStyle;
-    }
-
+    if (state.isSelected) return daySelectedTextStyle;
     // Highlighted state (e.g., today) has medium priority
-    if (state.isToday) {
-      return dayHighlightTextStyle;
-    }
-
+    if (state.isToday) return dayHighlightTextStyle;
     // In-range state has lower priority
-    if (state.isInRange) {
-      return daySelectedTextStyle;
-    }
-
+    if (state.isInRange) return daySelectedTextStyle;
     // Default state for normal dates
     return dayTextStyle;
   }
@@ -498,30 +484,28 @@ class FlickThemeData {
   /// Implements the state priority logic for decoration selection, including
   /// special handling for range selections with custom border radius configurations.
   BoxDecoration? _getDecorationForState(_DayState state) {
-    // Disabled state has highest priority
-    if (state.isDisabled) {
-      return dayDisabledDecoration;
-    }
+    bool inRange = state.isInRange;
+    bool disabled = state.isDisabled;
 
     bool selected = state.isSelected;
-    BorderRadius? radius;
-
-    // Handle range selection border radius
-    if (state.isRangeStart == true && selected == true) {
-      radius = onlyLeftBorderRadius;
-    } else if (state.isRangeEnd == true && selected == true) {
-      radius = onlyRightBorderRadius;
-    } else if (state.isInRange == true) {
-      radius = noBorderRadius;
+    // Disabled state has highest priority
+    if (disabled && !selected && !inRange) return dayDisabledDecoration;
+    if (daySelectedDecoration != null) {
+      BorderRadius? radius;
+      BoxDecoration decoration = daySelectedDecoration!;
+      // Handle range selection border radius
+      if (state.isRangeStart == true && selected == true) {
+        radius = onlyLeftBorderRadius;
+      } else if (state.isRangeEnd == true && selected == true) {
+        radius = onlyRightBorderRadius;
+      } else if (state.isInRange == true) {
+        radius = noBorderRadius;
+      }
+      // Apply custom border radius for range selections
+      if (radius != null) return decoration.copyWith(borderRadius: radius);
+      // Standard state handling
+      if (selected) return decoration;
     }
-
-    // Apply custom border radius for range selections
-    if (radius != null) {
-      return daySelectedDecoration!.copyWith(borderRadius: radius);
-    }
-
-    // Standard state handling
-    if (selected) return daySelectedDecoration;
     if (state.isToday) return dayHighlightDecoration;
     return dayDecoration;
   }

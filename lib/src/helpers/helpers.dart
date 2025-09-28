@@ -191,6 +191,7 @@ class DateHelpers {
   /// Returns:
   /// A [DateTime] object 100 years before the reference date
   static DateTime maybe100yearsAgo(DateTime? date) {
+    if (date != null) return date;
     final today = maybeToday(date);
     return DateTime(today.year - 100, today.month, today.day);
   }
@@ -207,6 +208,7 @@ class DateHelpers {
   /// Returns:
   /// A [DateTime] object 100 years after the reference date
   static DateTime maybe100yearsAfter(DateTime? date) {
+    if (date != null) return date;
     final today = maybeToday(date);
     return DateTime(today.year + 100, today.month, today.day);
   }
@@ -416,6 +418,7 @@ class DateHelpers {
     if (a == null || b == null) return false;
     return a.isBefore(b);
   }
+
   static bool after(DateTime? a, DateTime? b) {
     if (a == null || b == null) return false;
     return a.isAfter(b);

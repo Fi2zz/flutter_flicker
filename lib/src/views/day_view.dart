@@ -93,11 +93,8 @@ class DayView extends StatelessWidget {
     onTap() => store.onSelectDate(date!);
     // Cache store values to reduce repeated lookups
     final isRange = store.mode == SelectionMode.range;
-    final selected = store.selection.any(
-      (d) => DateHelpers.isSameDay(d, date!),
-    );
+    final selected = store.selection.any(date!);
     final isInRange = isRange && store.selection.between(date!);
-
     bool notEmpty = store.selection.isNotEmpty;
 
     // Determine range start and end positions for visual styling

@@ -6,6 +6,7 @@ import 'package:flutter_flicker/src/store/store.dart';
 import 'package:flutter_flicker/src/widgets/painters.dart';
 import 'package:flutter_flicker/src/widgets/swipable_view.dart';
 import 'package:flutter_flicker/src/widgets/views.dart';
+import 'package:signals/signals_flutter.dart';
 
 /// Header View Component
 ///
@@ -59,8 +60,11 @@ class HeaderView extends StatelessWidget {
   ///
   /// [store] The current store instance containing date constraints
   bool _canTapLeft(Store store) {
-    if (store.startDate == null) return true;
-    return !DateHelpers.isSameMonth(store.display, store.startDate!);
+    if (store.startDateSignal.value == null) return true;
+    return !DateHelpers.isSameMonth(
+      store.display,
+      store.startDateSignal.value!,
+    );
   }
 
   /// Determines if the right navigation button should be enabled
@@ -71,8 +75,8 @@ class HeaderView extends StatelessWidget {
   ///
   /// [store] The current store instance containing date constraints
   bool _canTapRight(Store store) {
-    if (store.endDate == null) return true;
-    return !DateHelpers.isSameMonth(store.display, store.endDate!);
+    if (store.endDateSignal.value == null) return true;
+    return !DateHelpers.isSameMonth(store.display, store.endDateSignal.value!);
   }
 
   /// Builds the header view with navigation controls and weekday labels
@@ -85,83 +89,85 @@ class HeaderView extends StatelessWidget {
   /// The header integrates theme colors for consistent visual styling.
   @override
   Widget build(BuildContext context) {
-    final theme = Context.themeOf(context);
-    final store = Context.storeOf(context);
-    // Use selected text color for navigation elements to maintain visual consistency
-    Color color = theme.daySelectedTextStyle.color!;
+    return Watch((context) {
+      final theme = Context.themeOf(context);
+      final store = Context.storeOf(context);
+      // Use selected text color for navigation elements to maintain visual consistency
+      Color color = theme.daySelectedTextStyle.color!;
 
-    // Build the weekday header row
-    final week = _buildWeekView();
-    // For vertical layouts, only show the weekday header
-    if (store.isVertical) return week;
+      // Build the weekday header row
+      final week = _buildWeekView();
+      // For vertical layouts, only show the weekday header
+      if (store.isVertical) return week;
 
-    // Create left navigation button with boundary checking
-    final left = Tappable(
-      tappable: _canTapLeft(store),
-      onTap: () => controller.slide(store.viewCount * -1),
-      child: Chevron(type: 'left', color: color),
-    );
-
-    // Create right navigation button with boundary checking
-    final right = Tappable(
-      tappable: _canTapRight(store),
-      onTap: () => controller.slide(store.viewCount),
-      child: Chevron(type: 'right', color: color),
-    );
-
-    // Determine if year selection should be enabled
-    final tappable = store.isSingleView && store.startYear != store.endYear;
-    Widget header = const SizedBox.shrink();
-
-    // Build header layout based on view count
-    if (store.viewCount == 2) {
-      // Double view layout: Two separate month headers with navigation
-      Widget children1 = Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          left, // Left navigation for first month
-          Center(child: TitleView(date: store.display)),
-          const SizedBox.shrink(), // Placeholder for symmetry
-        ],
+      // Create left navigation button with boundary checking
+      final left = Tappable(
+        tappable: _canTapLeft(store),
+        onTap: () => controller.slide(store.viewCount * -1),
+        child: Chevron(type: 'left', color: color),
       );
-      Widget children2 = Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox.shrink(), // Placeholder for symmetry
-          Center(child: TitleView(date: store.nextDisplay)),
-          right, // Right navigation for second month
-        ],
+
+      // Create right navigation button with boundary checking
+      final right = Tappable(
+        tappable: _canTapRight(store),
+        onTap: () => controller.slide(store.viewCount),
+        child: Chevron(type: 'right', color: color),
       );
-      header = Row(
-        children: [
-          BaseView(child: children1),
-          BaseView(child: children2),
-        ],
-      );
-    } else if (store.viewCount == 1) {
-      // Single view layout: Centered title with navigation buttons
-      header = Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: TitleView(
-              date: store.display,
-              onTap: store.onSwtichView, // Enable year selection if available
-              child: Triangle(
-                reverse: tappable == false ? null : false,
-                color: color,
+
+      // Determine if year selection should be enabled
+      final tappable = store.isSingleView;
+      Widget header = const SizedBox.shrink();
+
+      // Build header layout based on view count
+      if (store.viewCount == 2) {
+        // Double view layout: Two separate month headers with navigation
+        Widget children1 = Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            left, // Left navigation for first month
+            Center(child: TitleView(date: store.display)),
+            const SizedBox.shrink(), // Placeholder for symmetry
+          ],
+        );
+        Widget children2 = Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox.shrink(), // Placeholder for symmetry
+            Center(child: TitleView(date: store.nextDisplay)),
+            right, // Right navigation for second month
+          ],
+        );
+        header = Row(
+          children: [
+            BaseView(child: children1),
+            BaseView(child: children2),
+          ],
+        );
+      } else if (store.viewCount == 1) {
+        // Single view layout: Centered title with navigation buttons
+        header = Row(
+          children: [
+            Expanded(
+              flex: 4,
+              child: TitleView(
+                date: store.display,
+                onTap: store.onSwtichView, // Enable year selection if available
+                child: Triangle(
+                  reverse: tappable == false ? null : false,
+                  color: color,
+                ),
               ),
             ),
-          ),
-          left,
-          right,
-        ],
-      );
-    }
-    // Combine header and weekday row
-    return Column(children: [header, week]);
+            left,
+            right,
+          ],
+        );
+      }
+      // Combine header and weekday row
+      return Column(children: [header, week]);
+    });
   }
 
   /// Builds the weekday header row

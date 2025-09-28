@@ -4,6 +4,7 @@ import 'package:flutter_flicker/src/widgets/painters.dart';
 import 'package:flutter_flicker/src/widgets/views.dart';
 import 'package:flutter_flicker/src/store/context.dart';
 import 'package:flutter_flicker/src/widgets/scrollable_view/scrollable_view.dart';
+import 'package:flutter_flicker/src/helpers/helpers.dart';
 
 /// Year Selection View Component
 ///
@@ -57,22 +58,36 @@ import 'package:flutter_flicker/src/widgets/scrollable_view/scrollable_view.dart
 class YearsView extends StatelessWidget {
   /// Creates a year selection view component
   const YearsView({super.key});
-  
+
+  int getRemains(int startYear, int endYear1) {
+    return (endYear1 - startYear) % 20;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Context.themeOf(context);
     // Use selected text color for consistent theming
     Color color = theme.daySelectedTextStyle.color!;
     final store = Context.storeOf(context);
-    
-    // Helper functions for year state determination
+    int startYear = DateHelpers.maybe100yearsAgo(
+      store.startDateSignal.value,
+    ).year;
+    int endYear1 = DateHelpers.maybe100yearsAfter(
+      store.endDateSignal.value,
+    ).year;
+
+    int realEndYear = endYear1;
+
+    int remains = getRemains(startYear, endYear1);
+    if (remains != 0) {
+      realEndYear = endYear1 - remains;
+    }
     bool selected(int year) => year == store.display.year;
-    bool disabled(int year) => year < store.startYear || year > store.endYear;
-    
+    bool disabled(int year) => year < startYear || year > realEndYear;
     // Build the scrollable year selection list
     final child = ScrollableView(
-      startValue: store.startYear,
-      endValue: store.endYear,
+      startValue: startYear,
+      endValue: realEndYear,
       initialValue: store.display.year,
       itemHeight: unitSize,
       itemBuilder: (context, year, index) {
@@ -89,9 +104,12 @@ class YearsView extends StatelessWidget {
     final title = TitleView(
       date: Context.storeOf(context).display,
       onTap: Context.storeOf(context).onSwtichView,
-      child: Triangle(reverse: true, color: color), // Up arrow for back navigation
+      child: Triangle(
+        reverse: true,
+        color: color,
+      ), // Up arrow for back navigation
     );
-    
+
     // Combine header and year list in a column layout
     return Column(
       children: [
